@@ -1,0 +1,53 @@
+*git --version
+*用户信息:git config --global user.name "mingqian"	git config --global user.email "eric@example.com"
+*文本编辑器: git config --global core.editor emacs
+*差异分析工具: git config --global merge.tool vimdiff
+*颜色设置:git config --global color.ui true
+*命令简化:git config --global alias.st status   git config --global alias.unstage "reset HEAD"
+*配置信息:git config --list
+*创建版本库: mkdir learngit  >  cd learngit > git init > git add . > git commit -m "explannation"
+*仓库状态: git status
+*查看修改: git diff file
+*历史记录:git log  (HEAD表示当前版本，上个版本HEAD"^",上100个HEAD~100)
+*版本回退: git reset --hard HEAD^^
+*版本前进: git reset --hard commit_id
+*命令记录: git reflog 可查看commit_id
+*工作区恢复到最近一次git add或git commit时的状态: git checkout -- file
+*暂存区的修改回退到工作区: git reset HEAD file
+*删除文件: git rm file  > git commit -m "remove"
+*创建SSH Key: ssh-keygen -t rsa -C "emailadress"    公钥需添加到github
+*公钥测试: ssh -T git@github.com
+*查看私钥:ssh-add -l  (若couldn't open, 则ssh-agent bash进入SSH bash > 添加私钥: ssh-add ~/.ssh/id_rsa)
+*关联远程库:git remote add origin git@github.com:1345190856/project.git
+*查看远程:git remote -v
+*删除远程:git remote rm origin
+*推送远程:git push -u origin master(第一次加-u)
+*远程克隆:git clone git@github.com:1345190856/project.git或git clone https://github.com/1345190856/project.git
+*创建并切换分支:git checkout -b name (等同git branch name > git checkout name)
+*查看分支:git branch
+*Fast forward模式合并分支:git merge name(name分支合并到当前分支)
+*删除分支:git branch -d name
+*分支合并图:git log --graph --pretty=oneline --abbrev-commit
+*普通模式合并分支:git merge --no-ff -m "merge with no-ff" dev
+*临时挂起:git stash
+*存放列表:git stash list
+*恢复工作:git stash pop(或git stash apply > git stash drop)
+*恢复指定暂存:git stash apply stash@{number}
+*强行删除未合并分支:git branch -D name
+*查看远程库:git remote -v
+*推送分支:git push origin name(master/dev)
+*创建远程origin的dev分支到本地:git checkout -b dev origin/dev
+*本地dev连接origin/dev:git branch --set-upstream-to=origin/dev dev
+*更新最新origin/dev到本地dev: git pull(有冲突先解决提交再push)  git pull --no-edit避免弹出vim
+*打标签:git tag v1.0(最近commit)  git tag v0.9 commit_id
+*查看标签: git tag
+*查看标签信息: git show v0.9
+*创建有说明的标签:git tag -a v1.0 -m "version 1.0 released" commit_id
+*创建PGP签名标签:git tag -s v1.0 -m "version 1.0 released" commit_id
+*删除本地标签:git tag -d v1.0
+*标签推送到远程:git push origin v1.0  
+*推送全部标签:git push origin --tags
+*删除远程标签:git push origin :refs/tags/v1.0
+*关联多个远程库:git remote add github git@github/com:1345190856/project   git remote add gitee git@gitee.com:youkii/project
+*更新远程跟踪分支:git fetch origin
+*检查忽略:git check-ignore -v file
