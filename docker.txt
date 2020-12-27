@@ -1,0 +1,38 @@
+sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+yum list docker-ce --showduplicates | sort -r
+sudo yum install docker-ce-<VERSION_STRING> docker-ce-cli-<VERSION_STRING> containerd.io
+sudo yum install docker-ce docker-ce-cli containerd.io
+vi /etc/docker/daemon.conf    添加{"registry-mirrors": ["https://docker.mirrors.ustc.edu.cn"]}
+sudo systemctl start docker
+sudo docker run hello-world
+
+
+*Docker:image container respository
+*image:read-only template
+*container:instance created from image.容器启动时创建一层可写层作为最上层
+*Regisrty存放多个respository,每个respository包含多个image.respository include privite and public.
+*service dockrt start
+*获取镜像：sudo docker pull ubuntu:12.04  指定仓库：sudo docker pull dl.dockerpool.com:5000/ubuntu:12.04
+*创建容器运行bash:sudo docker run -t -i ubuntu:12.04 /bin/bash
+*本地镜像：docker images
+*提交副本：docker commit [-ma]
+*mkdir sinatra > cd sinatra > touch Dockerfile > 在dockerfile中写入下面信息 > sudo	docker	build	-t="ouruser/sinatra:v2" .  
+#	This	is	a	comment
+FROM	ubuntu:14.04
+MAINTAINER	Docker	Newbee	<newbee@docker.com> # 维护者信息
+RUN	apt-get	-qq	update
+RUN	apt-get	-qqy	install	ruby	ruby-dev
+RUN	gem	install	sinatra
+*修改镜像标签：	sudo docker	tag	5db5f8471261 ouruser/sinatra:devel
+*本地文件系统导入镜像：sudo	cat	ubuntu-14.04-x86_64-minimal.tar.gz |docker import - ubuntu:14.04
+*docker hub注册后推送镜像：sudo docker push ouruser/sinatra
+*存出镜像：sudo	docker save -o ubuntu_14.04.tar	ubuntu:14.04
+*载入镜像：sudo docker load --input ubuntu_14.04.tar
+*移除本地镜像：docker rmi training/sinatra 删除前用docker rm 删除依赖于此镜像的所有容器
+*新建启动：	sudo docker run -t -i ubuntu:12.04 /bin/bash
+*启动已终止容器:docker start
+*终止容器：docker stop
+*进入容器：docker attach ID 也可使用nsenter或下载.bashrc_docker
+-------------------------------------------------------------------------------
