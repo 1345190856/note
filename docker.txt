@@ -35,4 +35,30 @@ RUN	gem	install	sinatra
 *启动已终止容器:docker start
 *终止容器：docker stop
 *进入容器：docker attach ID 也可使用nsenter或下载.bashrc_docker
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------
+*docker engine包括：CLI->REST API->dockerd
+*Docker Damon：dockerd，用来监听 Docker API 的请求和管理 Docker 对象，比如镜像、容器、网络和 Volume。
+*docker pull [选项] [Docker Registry 地址[:端口]/]仓库名[:标签]
+* docker run -it --rm ubuntu:16.04 /bin/bash
+*docker image ls
+*docker system df
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
