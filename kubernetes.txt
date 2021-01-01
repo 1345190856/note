@@ -150,7 +150,9 @@ docker image load -i /tmp/kube-proxy.tar  # load导入
 docker image load -i /tmp/pause.tar
 docker image load -i /tmp/flannel.tar
 
-
+----------------------------------------------------------PV---------------------------------------
+PV持久化卷   PVC(持久化卷声明)，PVC 是用户存储的一种声明，PVC 和 Pod 比较类似，Pod 消耗的是节点，PVC 消耗的是 PV 资源，Pod 可以请求 CPU 和内存，而 PVC 可以请求特定的存储空间和访问模式
+StorageClass可以将存储资源定义为某种类型的资源，比如快速存储、慢速存储
 
 
 

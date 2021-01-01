@@ -1,0 +1,99 @@
+ls(TCP)
+lsc()
+a=IP(ttl=10) a.src   a.dst="192.168.1.1"  del(a.ttl)  
+Ether()/IP()/TCP()   
+Ether()/IP()/IP()/UDP()
+IP()/TCP()/"GET / HTTP/1.0\r\n\r\n"
+str(IP())  #
+IP(_)   _是上一条语句执行的结果
+a=Ether()/IP(dst="www.slashdot.org")/TCP()/"GET /index.html HTTP/1.0 \n\n"
+hexdump(a)
+b=str(a)
+c=Ether(b)
+c.hide_defaults()
+a=rdpcap("/spare/captures/isakmp.cap")
+str(pkt) 	组装数据包
+hexdump(pkt) 	十六进制转储
+ls(pkt) 	显示出字段值的列表
+pkt.summary() 	一行摘要
+pkt.show() 	针对数据包的展开试图
+pkt.show2() 	显示聚合的数据包（例如，计算好了校验和）
+pkt.sprintf() 	用数据包字段填充格式字符串
+pkt.decode_payload_as() 	改变payload的decode方式
+pkt.psdump() 	绘制一个解释说明的PostScript图表
+pkt.pdfdump() 	绘制一个解释说明的PDF
+pkt.command() 	返回可以生成数据包的Scapy命令
+summary() 	显示一个关于每个数据包的摘要列表
+nsummary() 	同上，但规定了数据包数量
+conversations() 	显示一个会话图表
+show() 	显示首选表示（通常用nsummary()）
+filter() 	返回一个lambda过滤后的数据包列表
+hexdump() 	返回所有数据包的一个hexdump
+hexraw() 	返回所以数据包Raw layer的hexdump
+padding() 	返回一个带填充的数据包的hexdump
+nzpadding() 	返回一个具有非零填充的数据包的hexdump
+plot() 	规划一个应用到数据包列表的lambda函数
+make table() 	根据lambda函数来显示表格
+send()函数将会在第3层发送数据包,sendp()函数将会工作在第2层。
+send(IP(dst="1.2.3.4")/ICMP())
+sendp(Ether()/IP(dst="1.2.3.4",ttl=(1,4)), iface="eth1")
+sendp(rdpcap("/tmp/pcapfile")) # tcpreplay
+send(IP(dst="target")/fuzz(UDP()/NTP(version=4)),loop=1)
+sr()函数是用来发送数据包和接收应答。该函数返回一对数据包及其应答，还有无应答的数据包。sr1()函数是一种变体，用来返回一个应答数据包。发送的数据包必须是第3层报文（IP，ARP等）。srp()则是使用第2层报文（以太网，802.3等）
+p=sr1(IP(dst="www.slashdot.org")/ICMP()/"XXXXXXXXXXX")   p.show()
+sr1(IP(dst="192.168.5.1")/UDP()/DNS(rd=1,qd=DNSQR(qname="www.slashdot.org")))
+sr(IP(dst="192.168.8.1")/TCP(dport=[21,22,23]))   ans,unans=_        ans.summary()   返回一对两个列表。第一个就是发送的数据包及其应答组成的列表，第二个是无应答数据包组成的列表。
+inter参数来设置两个数据包之间等待的时间间隔,如果retry设置为3，scapy会对无应答的数据包重复发送三次,timeout参数设置在最后一个数据包发出去之后的等待时间：
+sr1(IP(dst="72.14.207.99")/TCP(dport=80,flags="S"))  # SYN scans
+sr(IP(dst="192.168.1.1")/TCP(sport=RandShort(),dport=[440,441,442,443],flags="S"))
+ans.summary( lambda(s,r): r.sprintf("%TCP.sport% \t %TCP.flags%") )
+ans,unans = sr(IP(dst=["192.168.1.1","yahoo.com","slashdot.org"])/TCP(dport=[22,80,443],flags="S"))
+ans.make_table(lambda(s,r): (s.dst, s.dport, r.sprintf("{TCP:%TCP.flags%}{ICMP:%IP.src% - %ICMP.type%}")))
+ans.nsummary(lfilter = lambda (s,r): r.sprintf("%TCP.flags%") == "SA")    #查看syn-ack包
+ans.summary(lfilter = lambda (s,r): r.sprintf("%TCP.flags%") == "SA",prn=lambda(s,r):r.sprintf("%TCP.sport% is open"))  #开放的端口
+ans.filter(lambda (s,r):TCP in r and r[TCP].flags&2).make_table(lambda (s,r):(s.dst, s.dport, "X"))
+ans,unans=sr(IP(dst=target, ttl=(4,25),id=RandShort())/TCP(flags=0x2))  # TCP路由追踪
+for snd,rcv in ans:
+    print snd.ttl, rcv.src, isinstance(rcv.payload, TCP)
+sniff(filter="icmp and host 66.35.250.151", count=2)
+a=_
+a.nsummary()
+sniff(iface="eth1", prn=lambda x: x.show())
+pkts = sniff(prn=lambda x:x.sprintf("{IP:%IP.src% -> %IP.dst%\n}{Raw:%Raw.load%\n}"))
+a=sniff(filter="tcp and ( port 25 or port 110 )", prn=lambda x: x.sprintf("%IP.src%:%TCP.sport% -> %IP.dst%:%TCP.dport%  %2s,TCP.flags% : %TCP.payload%"))  #BPF
+wrpcap("temp.cap",pkts)  #写入
+pkts = rdpcap("temp.cap")
+hexdump(pkt)  # 十六进制格式输出编码的数据包
+pkts = sniff(count = 1)
+pkt = pkts[0]
+BASE64:export_object(pkt)    new_pkt = import_object()
+路由：conf.route  conf.route.delt(net="0.0.0.0/0",gw="192.168.8.1")      conf.route.add(net="0.0.0.0/0",gw="192.168.8.254")   conf.route.resync()
+traceroute(["www.yahoo.com","www.altavista.com","www.wisenut.com","www.copernic.com"],maxttl=20)
+ans,unans=srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst="192.168.1.0/24"),timeout=2)  # arp ping
+ans,unans=sr( IP(dst="192.168.1.*")/TCP(dport=80,flags="S") )  #tcp ping
+pkt[i].getlayer(DNS).qd.qname
+-----------------------------------------------------------------------报文构造-----------------------------------------------
+conf.checkIPaddr = False
+fam,hw = get_if_raw_hwaddr(conf.iface)
+dhcp_discover = Ether(dst="ff:ff:ff:ff:ff:ff")/IP(src="0.0.0.0",dst="255.255.255.255")/UDP(sport=68,dport=67)/BOOTP(chaddr=hw)/DHCP(options=[("message-type","discover"),"end"])
+ans, unans = srp(dhcp_discover, multi=True)      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

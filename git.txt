@@ -51,3 +51,5 @@
 *关联多个远程库:git remote add github git@github/com:1345190856/project   git remote add gitee git@gitee.com:youkii/project
 *更新远程跟踪分支:git fetch origin
 *检查忽略:git check-ignore -v file
+
+

@@ -35,15 +35,75 @@ RUN	gem	install	sinatra
 *启动已终止容器:docker start
 *终止容器：docker stop
 *进入容器：docker attach ID 也可使用nsenter或下载.bashrc_docker
---------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------操作--------------------------------------------------------
+*底层技术支持：Namespaces（做隔离）、CGroups（做资源限制）、UnionFS（镜像和容器的分层） the-underlying-technology Docker 底层架构分析
 *docker engine包括：CLI->REST API->dockerd
 *Docker Damon：dockerd，用来监听 Docker API 的请求和管理 Docker 对象，比如镜像、容器、网络和 Volume。
 *docker pull [选项] [Docker Registry 地址[:端口]/]仓库名[:标签]
-* docker run -it --rm ubuntu:16.04 /bin/bash
+*docker run -it --rm ubuntu:16.04 /bin/bash    #容器exit退出后删除
 *docker image ls
 *docker system df
-
-
+*docker run来创建容器时,检查本地是否存在指定的镜像，不存在就从公有仓库下载。利用镜像创建并启动一个容器。分配一个文件系统，并在只读的镜像层外面挂载一层可读写层。从宿主主机配置的网桥接口中桥接一个虚拟接口到容器中去。从地址池配置一个 ip 地址给容器。执行用户指定的应用程序，执行完毕后容器被终止。
+*docker container ls -a   
+*docker container start ID 
+*docker run -d ubuntu:16.04 /bin/sh -c "while true; do echo hello world; sleep 1; done"   # -d后台运行
+*docker container logs ID
+*docker container stop ID
+*docker exec -it ID bash  #进入容器，退出后不会终止
+*docker container rm ID
+*docker container prune  或 docker ps -aq  #删除所有终止的容器
+*docker rmi 镜像名
+*docker run --name webserver -d -p 80:80 nginx
+*docker diff webserver  
+*docker commit --author "lz" --message "修改了默认首页" webserver nginx:v2   #保存为镜像
+*docker history nginx:v2
+*docker run --name webserv2 -d -p 81:80 nginx:v2   # http://localhost:81
+---------------------------------------------------------------------dockerfile-------------------------------------------------------
+*vi Dcokerfile:
+FROM nginx   #空白镜像可使用scratch
+RUN echo '<h1>Hello, Docker!</h1>' > /usr/share/nginx/html/index.html
+*多层写法：
+FROM debian:jessie
+RUN buildDeps='gcc libc6-dev make' \
+    && apt-get update \
+    && apt-get install -y $buildDeps \
+    && wget -O redis.tar.gz "http://download.redis.io/releases/redis-3.2.5.tar.gz" \
+    && mkdir -p /usr/src/redis \
+    && tar -xzf redis.tar.gz -C /usr/src/redis --strip-components=1 \
+    && make -C /usr/src/redis \
+    && make -C /usr/src/redis install \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm redis.tar.gz \
+    && rm -r /usr/src/redis \
+    && apt-get purge -y --auto-remove $buildDeps
+*docker build -t nginx:v3 .      #构建镜像，Dockerfile 文件所在目录执行，.为上下文目录
+*.dockerignore，该文件是用于剔除不需要作为上下文传递给 Docker 引擎的
+*docker save alpine | gzip > alpine-latest.tar.gz   
+*docker load -i alpine-latest.tar.gz   #结合上条命令迁移镜像
+*docker save <镜像名> | bzip2 | pv | ssh <用户名>@<主机名> 'cat | docker load'
+--------------------------------------------------------私有仓库-------------------------------------------------
+*docker login 
+*docker logout
+*docker search centos
+*docker pull centos
+*docker tag ubuntu:17.10 username/ubuntu:17.10
+*docker run -d -p 5000:5000 --restart=always --name registry registry   #使用官方的registry镜像来启动私有仓库,仓库会被创建在容器的/var/lib/registry目录下, -v 参数来将镜像文件存放在本地的指定路径。例如下面的例子将上传的镜像放到本地的 /opt/data/registry 目录。
+docker run -d -p 5000:5000 -v /opt/data/registry:/var/lib/registry registry
+*docker tag ubuntu:latest 127.0.0.1:5000/ubuntu:latest
+*docker push 127.0.0.1:5000/ubuntu:latest
+*私有仓库设置，/etc/docker/daemon.json中写入:
+{
+  "registry-mirror": [
+    "https://registry.docker-cn.com"
+  ],
+  "insecure-registries": [
+    "192.168.199.100:5000"
+  ]
+}
+----------------------------------------------------
+*数据卷是一个可供一个或多个容器使用的特殊目录，它绕过UFS,可以在容器之间共享和重用,对数据卷的修改会立马生效,对数据卷的更新，不会影响镜像，数据卷默认会一直存在，即使容器被删除
+*docker volume create my-vol
+*docker volume inspect my-vol
 
 
 
