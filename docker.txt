@@ -4,7 +4,7 @@ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/dock
 yum list docker-ce --showduplicates | sort -r
 sudo yum install docker-ce-<VERSION_STRING> docker-ce-cli-<VERSION_STRING> containerd.io
 sudo yum install docker-ce docker-ce-cli containerd.io
-vi /etc/docker/daemon.conf    添加{"registry-mirrors": ["https://docker.mirrors.ustc.edu.cn"]}
+curl -sSL https://get.daocloud.io/daotools/set_mirror.sh | sh -s http://f1361db2.m.daocloud.io  #镜像加速
 sudo systemctl start docker
 sudo docker run hello-world
 
@@ -29,7 +29,7 @@ RUN	gem	install	sinatra
 *本地文件系统导入镜像：sudo	cat	ubuntu-14.04-x86_64-minimal.tar.gz |docker import - ubuntu:14.04
 *docker hub注册后推送镜像：sudo docker push ouruser/sinatra
 *存出镜像：sudo	docker save -o ubuntu_14.04.tar	ubuntu:14.04
-*载入镜像：sudo docker load --input ubuntu_14.04.tar
+*载入镜像：sudo docker load --input                              ubuntu_14.04.tar
 *移除本地镜像：docker rmi training/sinatra 删除前用docker rm 删除依赖于此镜像的所有容器
 *新建启动：	sudo docker run -t -i ubuntu:12.04 /bin/bash
 *启动已终止容器:docker start
@@ -100,10 +100,73 @@ docker run -d -p 5000:5000 -v /opt/data/registry:/var/lib/registry registry
     "192.168.199.100:5000"
   ]
 }
-----------------------------------------------------
+----------------------------------------------------数据共享---------------------------
+*数据卷、挂载主机目录
 *数据卷是一个可供一个或多个容器使用的特殊目录，它绕过UFS,可以在容器之间共享和重用,对数据卷的修改会立马生效,对数据卷的更新，不会影响镜像，数据卷默认会一直存在，即使容器被删除
 *docker volume create my-vol
-*docker volume inspect my-vol
+*docker volume ls
+*docker volume inspect my-vol  
+*docker run -d -P --name web --mount source=my-vol,target=/webapp training/webapp python app.py
+*docker volume rm my-vol 
+*docker volume prune
+*docker run -d -P --name web  -v /src/webapp:/opt/webapp:ro  training/webapp python app.py   #挂载主机目录,只读
+*docker run --rm -it --mount type=bind,source=$HOME/.bash_history,target=/root/.bash_history ubuntu:17.10 bash  #挂载单个文件
+-----------------------------------------------网络模式---------------------------------------
+*Docker进程启动时，会在主机上创建一个名为docker0的虚拟网桥，此主机上启动的Docker容器会连接到这个虚拟网桥上。从docker0子网中分配一个 IP 给容器使用，并设置 docker0 的 IP 地址为容器的默认网关。bridge模式是 docker 的默认网络模式。
+*docker run -tid --net=bridge --name docker_bri1 ubuntu-base:v3 docker run -tid --net=bridge --name docker_bri2 ubuntu-base:v3 
+*docker network create -d bridge my-net
+*docker run -it --rm --name busybox1 --network my-net busybox sh
+*docker run -it --rm --name busybox2 --network my-net busybox sh
+*ping busybox1
+*如果启动容器的时候使用host模式,容器将不会虚拟出自己的网卡，配置自己的 IP 等，而是使用宿主机的 IP 和端口
+*docker run -tid --net=host --name docker_host1 ubuntu-base:v3
+*docker exec -ti docker_host1 /bin/bash
+*container模式指定新创建的容器和已经存在的一个容器共享一个 Network Namespace，两个容器的进程可以通过 lo 网卡设备通信
+*docker run -tid --net=container:docker_bri1 --name docker_con1 ubuntu-base:v3
+*none模式，Docker 容器拥有自己的 Network Namespace，但是，并不为Docker 容器进行任何网络配置
+------------------------------------------------docker compose------------------------------------------
+*服务 (service)：一个应用的容器，实际上可以包括若干运行相同镜像的容器实例。
+*项目 (project)：由一组关联的应用容器组成的一个完整业务单元，在 docker-compose.yml 文件中定义。
+*二进制安装：
+sudo curl -L https://github.com/docker/compose/releases/download/1.17.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo rm /usr/local/bin/docker-compose  #删除 
+*pip安装，arm架构：
+sudo pip install -U docker-compose
+curl -L https://raw.githubusercontent.com/docker/compose/1.8.0/contrib/completion/bash/docker-compose > /etc/bash_completion.d/docker-compose
+sudo pip uninstall docker-compose
+*容器安装
+curl -L https://github.com/docker/compose/releases/download/1.8.0/run.sh > /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+*docker-compose [-f=<arg>...] [options] [COMMAND] [ARGS...]
+-f, --file FILE 指定使用的 Compose 模板文件，默认为 docker-compose.yml，可以多次指定。
+-p, --project-name NAME 指定项目名称，默认将使用所在目录名称作为项目名。
+--x-networking 使用 Docker 的可拔插网络后端特性
+--x-network-driver DRIVER 指定网络后端的驱动，默认为 bridge
+--verbose 输出更多调试信息。
+-v, --version 打印版本并退出。
+*docker-compose kill -s SIGINT
+*docker-compose run ubuntu ping docker.com
+*docker-compose run --no-deps web python manage.py shell  #不启动关联容器
+*docker-compose scale web=3 db=2
+------------------------------------------------------docker machine--------------------------------------
+*Docker Machine是 Docker 官方提供的一个工具，它可以帮助我们在远程的机器上安装 Docker，或者在虚拟机 host 上直接安装虚拟机并在虚拟机中安装 Docker。我们还可以通过 docker-machine命令来管理这些虚拟机和 Docker。
+*sudo curl -L https://github.com/docker/machine/releases/download/v0.13.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine
+sudo chmod +x /usr/local/bin/docker-machine
+*docker-machine create -d generic \
+    --generic-ip-address=123.59.188.19 \
+    --generic-ssh-user=root \
+    --generic-ssh-key ~/.ssh/id_rsa \
+    dev
+
+
+
+
+
+
+
+
+
 
 
 
