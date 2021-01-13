@@ -70,13 +70,24 @@ BASE64:export_object(pkt)    new_pkt = import_object()
 路由：conf.route  conf.route.delt(net="0.0.0.0/0",gw="192.168.8.1")      conf.route.add(net="0.0.0.0/0",gw="192.168.8.254")   conf.route.resync()
 traceroute(["www.yahoo.com","www.altavista.com","www.wisenut.com","www.copernic.com"],maxttl=20)
 ans,unans=srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst="192.168.1.0/24"),timeout=2)  # arp ping
-ans,unans=sr( IP(dst="192.168.1.*")/TCP(dport=80,flags="S") )  #tcp ping
+	ans,unans=sr( IP(dst="192.168.1.*")/TCP(dport=80,flags="S") )  #tcp ping
 pkt[i].getlayer(DNS).qd.qname
 -----------------------------------------------------------------------报文构造-----------------------------------------------
+dhcp:
 conf.checkIPaddr = False
 fam,hw = get_if_raw_hwaddr(conf.iface)
-dhcp_discover = Ether(dst="ff:ff:ff:ff:ff:ff")/IP(src="0.0.0.0",dst="255.255.255.255")/UDP(sport=68,dport=67)/BOOTP(chaddr=hw)/DHCP(options=[("message-type","discover"),"end"])
-ans, unans = srp(dhcp_discover, multi=True)      
+dhcp_discover = Ether(dst="ff:ff:ff:ff:ff:ff")/IP(src="0.0.0.0",dst="255.255.255.255")/UDP(sport=68,dport=67)/BOOTP(chaddr=hw)/DHCP(options=[("message-type","discover"),"end","pad","pad","pad"])
+ans, unans = srp(dhcp_discover, multi=True)
+dhcp_offer = Ether(dst="00:08:74:ad:f1:9b",src="00:0b:82:01:fc:42")/IP(src="192.168.0.1",dst="192.168.0.10")/UDP(sport=67,dport=68)/BOOTP(op="BOOTREPLY",htype=1,yiaddr="192.168.0.10")/DHCP(options=[("message-type","offer"),("lease_time",3600),"end","pad","pad"])
+dhcp_request = Ether(dst="ff:ff:ff:ff:ff:ff")/IP(src="0.0.0.0",dst="255.255.255.255")/UDP(sport=68,dport=67)/BOOTP(op="BOOTREQUEST",chaddr=hw)/DHCP(options=[("message-type","request"),("requested_addr","192.168.0.10"),("server_id","192.168.0.1"),("param_req_list",[1, 3, 6, 42]),"end","pad","pad","pad"])
+dhcp_ack = Ether(dst="00:08:74:ad:f1:9b",src="00:0b:82:01:fc:42")/IP(src="192.168.0.1",dst="192.168.0.10")/UDP(sport=67,dport=68)/BOOTP(op="BOOTREPLY",htype=1,yiaddr="192.168.0.10")/DHCP(options=[("message-type","offer"),("lease_time",3600),"end","pad","pad"])
+dhcp_nak = Ether(dst="00:08:74:ad:f1:9b",src="00:0b:82:01:fc:42")/IP(src="192.168.0.1")/UDP(sport=67,dport=68)/BOOTP(op="BOOTREPLY",htype=1)/DHCP(options=[("message-type","nak"),"end","pad","pad"])
+dhcp_release = Ether(dst="00:0b:82:01:fc:42")/IP(src="192.168.0.10",dst="192.18.0.1")/UDP(sport=68,dport=67)/BOOTP(op="BOOTREQUEST",chaddr=hw,xid=random.randint(0, 0xFFFFFFFF))/DHCP(options=[("message-type","release"),("server_id","192.168.0.1"),"end","pad","pad","pad"])
+dhcp_decline = Ether(dst="ff:ff:ff:ff:ff:ff")/IP(src="0.0.0.0",dst="255.255.255.255")/UDP(sport=68,dport=67)/BOOTP(op="BOOTREQUEST",chaddr=hw,xid=random.randint(0, 0xFFFFFFFF))/DHCP(options=[("message-type","decline"),"end","pad","pad","pad"])
+dhcp_inform = Ether(dst="00:0b:82:01:fc:42")/IP(src="192.168.0.10",dst="192.18.0.1")/UDP(sport=68,dport=67)/BOOTP(op="BOOTREQUEST",chaddr=hw,xid=random.randint(0, 0xFFFFFFFF))/DHCP(options=[("message-type","inform"),("server_id","192.168.0.1"),("param_req_list",[1, 3, 6, 42]),"end","pad","pad","pad"])
+
+dhcpv6:
+
 
 
 

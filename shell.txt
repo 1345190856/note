@@ -1,0 +1,203 @@
+*文件系统：pwd cd ls less more file
+*文件操作：cp mv(-iuv) mkdir(-alruv ) rm(-irfv) ln(硬链接不能跨物理设备，不能关联目录)
+*通配符：* ？[characters] [!characters] [[:class:]]
+*type which man(12345678) apropos info whatis alias(name='string') help
+*cat sort uniq grep wc head tail(-fn) tee
+*>  >>  2>  2>&1(&>)   2>/dev/null  cat > text.txt（ctrl+D结束）  cat < text.txt  > foo.txt
+*ls /bin /usr/bin | sort | uniq | less | wc
+*echo test;echo *;echo D*;echo [[:upper:]]*;echo /usr/*/share;echo ~;echo $((2+2));echo front-{a,b,c}-back;
+echo {1..5};echo a{A{1,2},B{3,4}}b;mkdir {2007..2009}-0{1..9} {2007..2009}-{10..12}
+*参数展开:echo $USER; 变量列表：printenv | less; 命令替换：echo $(ls);file $(ls /usr/bin/* | grep zip)
+*引用"":单词分割，路径名展开，波浪线展开，和花括号展开都被禁止，参数展开，算术展开，和命令替换仍然执行
+echo "$USER $((2+2)) $(cal)";
+*禁止展开'':echo 'text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER'
+*转义字符：\
+*快捷键：clear  history  ctrl+r(输入要查找历史命令文本后enter或ctrl+j复制)
+*!number !string以此开头历史命令  !?string包含 
+*权限：id  chmod(chmod 600 foo.txt)  umask(0002,suid4,sgid2,stid1)  su  sudo  chown(chown owner:group file)  chgrp  passwd(passwd user)
+*ps(ps x;ps aux;)  top(动态)  jobs  &(程序命令后加，后台运行)  bg(bg %工作序号)  fg(fg %工作序号)  ctrl+z(停止进程)  kill(kill [-signal(1、2、9、15、18、19)] PID;kill -l完整列表)   killall(killall -u user -signal name)   pstree  vmstat  xload  tload  
+*printenv | less;printenv USER;  set | less;  echo $HOME;
+*login shell启动文件：/etc/profile  ~/.bash_profile  ~/.bash_login  ~/.profile 
+nologin shell启动文件:/etc/bash.bashrc  ~/.bashrc
+*备份文件后缀：.bak .sav .old .orig
+*PATH=$PATH:$HOME/bin;export PATH
+*source ~/.bashrc 重新读取
+*echo $PS1;ps1_old="$PS1";PS1="$ps1_old";PS1="\A \h \$ "
+*终端提示符颜色：PS1='\[\033[1;35m\]<\u@\d \w>\$\[\033[0m\]'  export PS1  手动写入~/.bashrc
+*软件包查找工具：Debian:apt-get update; apt-cache search search_string
+Red Hat:yum search search_string
+*安装软件包:Debian: apt-get update; apt-get install package name  || dpkg --install package_file
+Red Hat: yum install package name || rpm -i package_file
+*软件包升级软件Debian： dpkg --install package_file		Red Hat： rpm -U package_file
+*卸载软件：Debian： apt-get remove package_name       Red Hat: yum erase package_name
+*更新软件包：Debian：apt-get update; apt-get upgrade     Red Hat： yum update
+*列出安装的软件包：dpkg --list 			rpm -qa
+*查询是否安装软件包：Debian： dpkg --status package_name		Red Hat： rpm -q package_name
+*软件包信息：Debian： apt-cache show package_name		Red Hat： yum info package_name
+*查找安装了某个文件的软件包： Debian: dpkg --search file_name		Red Hat: rpm -qf file_name
+*/etc/fstab列出系统启动时要挂载的设备,字段(设备名，挂载点，文件系统类型，选项，频率，次序)
+*mount  umount  
+*fdisk /dev/vda (:pltw)    mkfs -t ext3 /dev/vda1	 fsck /dev/vda1 	
+*数据移入/出设备:dd if=input_file of=output_file [bs=block_size [count=blocks]]
+*创建CD-ROM 映像:dd if=/dev/cdrom of=ubuntu.iso
+*写入CD-ROM映像：mount -t iso9660 -o loop image.iso /mnt/iso_image;wodim dev=/dev/cdrw blank=fast;wodim dev=/dev/cdrw image.iso
+*checksum: md5sum image.iso
+*ping baidu.com		traceroute baidu.com 	  netstat -ie;netstat -r	ftp fileserver;lcd Desktop;get ubuntu-8.04-desktopi386.iso;bye	 wget http://linuxcommand.org/index.php		ssh remote-sys 'ls \*' > dirlist.txt(单引号远程执行，输出到本地)	scp root@remote-sys:document.txt .(远端复制到当前目录)
+sftp remote-sys;lcd Desktop;get ubuntu-8.04-desktop-i386.iso;bye
+*查找文件：locate /bin/zip(需updatedb)  find ~ -type f -name "\*.JPG" -size +1M | wc -l;find ~ \( -type f -not -perm 0600 \) -or \( -type d -not -perm 0700 \);find ~ -type f -name '*.BAK' -delete;find ~ -type f -name 'foo*' -exec ls -l '{}' ';';find ~ -type f -name 'foo\*' -print | xargs ls -l;find ~ -iname ‘*.jpg’ -print0 | xargs –null ls -l
+*mkdir -p playground/dir-{00{1..9},0{10..99},100}
+touch playground/dir-{00{1..9},0{10..99},100}/file-{A..Z}
+stat file
+find playground -type f -name 'file-B' -exec touch '{}' ';'
+find playground -type f -newer playground/timestamp
+find playground \( -type f -not -perm 0600 \) -or \( -type d -not -perm 0700 \)
+find playground \( -type f -not -perm 0600 -exec chmod 0600 '{}' ';' \)  -or \( -type d -not -perm 0711 -exec chmod 0700 '{}' ';' \)
+*gzip(-cdtrv) 原始文件的压缩版会替代原始文件。  gunzip(-c)解压		zcat  zless  
+bzip2	bunzip2   bzcat   
+tar(cxrt)必须首先指定模式，然后才是其它的选项。tar cf playground.tar playground;tar tvf playground.tar;tar xf ../playground.tar   tar xf archive.tar pathname(恢复制定文件)   
+find playground -name 'file-A' | tar cf - --files-from=- | gzip > playground.tgz 
+find playground -name 'file-A' | tar czf playground.tgz -T -
+find playground -name 'file-A' | tar cjf playground.tbz -T -
+ssh remote-sys 'tar cf - Documents' | tar xf -  
+归档文件中的所有路径名都是相对的，所以首先我们必须更改目录到根目录下，这样抽取的文件路径就相对于根目录了。
+zip -r playground.zip playground      unzip ../playground.zip	find playground -name "file-A" | zip -@ file-A.zip    ls -l /etc/ | zip ls-etc.zip -
+*文件同步：rsync options source destination    rsync -av playground foo
+mkdir /media/BigDisk/backup    sudo rsync -av --delete /etc /home /usr/local /media/BigDisk/backup
+sudo rsync -av --delete --rsh=ssh /etc /home /usr/local remote-sys:/backup
+*grep (-ivclLnh) regex [file...]
+*元字符：^ $ . [ ] { } - ? * + ( ) | \  元字符用引号引起来至关重要，这样可以阻止shell 试图展开它们。
+grep -i '^..j.r$' /usr/share/dict/words;grep -h '[^bg]zip' dirlist*.txt;grep -h '^[A-Za-z0-9]' dirlist*.txt
+echo "BBB" | grep -E 'AAA|BBB';grep -Eh '^(bz|gz|zip)' dirlist*.txt;echo "(555) 123-4567" | grep -E '^\(?[0-9][0-9][0-9]\)? [0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]$';zgrep -El 'regex|regular expression' *.gz
+*echo $LANG;locale;export LANG=POSIX;
+*posix将把正则表达式的实现分成了两类：基本正则表达式BRE(^ $ . [ ] *)和扩展的正则表达式ERE(( ) { } ? + |)
+*正则表达式:? * + {}  
+for i in {1..10}; do echo "(${RANDOM:0:3}) ${RANDOM:0:3}-${RANDOM:0:4}" >> phonelist.txt; done
+grep -Ev '^\([0-9]{3}\) [0-9]{3}-[0-9]{4}$'  -v相反匹配
+find . -regex '.*[^-\_./0-9a-zA-Z].*'
+locate --regex 'bin/(bz|gz|zip)' 
+*文本处理：cat(-Ans)   sort > foo.txt   sort file1.txt file2.txt file3.txt > final_sorted_list.txt
+du -s /usr/share/* | sort -nr | head;ls -l /usr/bin | sort -nr -k 5 | head;sort --key=1,1 --key=2n distros.txt;sort -t ':' -k 7 /etc/passwd | head;sort foo.txt | uniq;cat -A distros.txt;cut -f 3 distros.txt;
+cut -f 3 distros.txt | cut -c 7-10;cut -d ':' -f 1 /etc/passwd | head;cut -f 1,2 distros-by-date.txt > distros-versions.txt;cut -f 3 distros-by-date.txt > distros-dates.txt;paste distros-dates.txt distros-versions.txt;join distros-key-names.txt distros-key-vernums.txt | head(所有文件按数据域排序)
+comm file1.txt file2.txt;diff file1.txt file2.txt;diff -[cu] file1.txt file2.txt;diff -Naur old_file new_file > diff_file.patch;patch -p0 < diff_file.patch(更新);patch -R -p0 < diff_file.patch(还原);
+echo "lowercase letters" | tr a-z A-Z;tr -d '\r' < dos_file > unix_file;echo "aaabbbccc" | tr -s ab;
+echo "front" | sed '1s/front/back/';sed -n '1,5p' distros.txt;sed -n '/SUSE/p' distros.txt(/正则表达式/);
+sed -n '/SUSE/!p' distros.txt;sed 's/([0-9]{2})/([0-9]{2})/([0-9]{4})$/\3-\1-\2/' distros.txt;
+echo "aaabbbccc" | sed 's/b/B/g';aspell check textfile;
+sed参数：n行号  $  /regexp/  addr1,addr2  first~step  addr1,+n  addr!
+sed命令：=当前行号  a追加  d删除 i插入  p打印  q  Q   s/regexp/replacement/    y/set1/set2
+*格式化输出：nl distros.txt | head;sort -k 1,1 -k 2n distros.txt | sed -f distros-nl.sed | nl;
+echo "The quick brown fox jumped over the lazy dog." | fold -w 12 -s;fmt -w 50 fmt-info.txt | head
+*打印：pr  lpr  lpstat lp a2ps  lpq  lprm  cancel  
+*configure程序是一个shell脚本，由源码树提供，分析程序建立环境。configure命令创建了几个新文件，最重要一个是
+Makefile，Makefile 是一个配置文件，指示make程序究竟如何构建程序。make 程序把一个makefile 文件作为输入（通常命名为Makefile），makefile 文件描述了包括最终完成的程序的各组件之间的关系和依赖性。make 只是构建需要构建的部分，而不是简单地重新构建所有的内容，它保持目标文件是最新的。
+*如果这个PATH 变量不包含这个目录，我们能够轻松地添加它，通过在.bashrc 文件添加，然后 .(同source) .bashrc 
+*a=z  b="string"  c="a string and $b"  d=$(ls -l foo.txt)  e=$((5*7))  f="\t\ta string\n"
+*mv $filename ${filename}1
+*command << token
+text
+token
+command是可以接受标准输入的命令名，token 是一个用来指示嵌入文本结束的字符串
+*函数：
+function name {
+commands
+return
+}
+or 
+name () {
+commands
+return
+}
+*if语句：
+if commands; then
+commands
+[elif commands; then
+commands...]
+[else
+commands]
+fi
+退出状态：$? 返回0为成功
+测试：[ expression ] 注意有空格
+*文件表达式：
+file1 -ef file2 file1 和file2 拥有相同的索引号（通过硬链接两个文件名指向相同的文件）。
+file1 -nt file2 file1 新于file2。
+file1 -ot file2 file1 早于file2。
+-b file file 存在并且是一个块（设备）文件。
+-c file file 存在并且是一个字符（设备）文件。
+-d file file 存在并且是一个目录。
+-e file file 存在。
+-f file file 存在并且是一个普通文件。
+-g file file 存在并且设置了组ID。
+-G file file 存在并且由有效组ID 拥有。
+-k file file 存在并且设置了它的“sticky bit”。
+-L file file 存在并且是一个符号链接。
+-O file file 存在并且由有效用户ID 拥有。
+-p file file 存在并且是一个命名管道。
+-r file file 存在并且可读（有效用户有可读权限）。
+-s file file 存在且其长度大于零。
+-S file file 存在且是一个网络socket。
+-t fd fd 是一个定向到终端／从终端定向的文件描述符。这可以被用来决定是否重定向了标准输入／输出错误。
+-u file file 存在并且设置了setuid 位。
+-w file file 存在并且可写（有效用户拥有可写权限）。
+-x file file 存在并且可执行（有效用户有执行／搜索权限）。
+*可在函数中用return代替exit命令
+*字符串表达式：
+string string 不为null。
+-n string 字符串string 的长度大于零。
+-z string 字符串string 的长度为零。
+string1 = string2
+string1 == string2    string1 和string2 相同. 单或双等号都可以，不过双等号更受欢迎。
+string1 != string2 string1 和string2 不相同。
+string1 > string2 sting1 排列在string2 之后。
+string1 < string2 string1 排列在string2 之前。
+*整型表达式：
+integer1 -eq integer2 integer1 等于integer2.
+integer1 -ne integer2 integer1 不等于integer2.
+integer1 -le integer2 integer1 小于或等于integer2.
+integer1 -lt integer2 integer1 小于integer2.
+integer1 -ge integer2 integer1 大于或等于integer2
+integer1 -gt integer2 integer1 大于integer2.
+*[[ expression ]] 可使用string =~ regex,返回值为真.==支持匹配
+*(())执行算术真测试((INT < 0 ))，不需要$展开符
+*结合表达式：AND OR NOT,测试表达式中为-a,-o,!,[[]]和(())中为&& || ！
+*使用()进行分组需要\转义
+*cat <<- _EOF_ 作为结束符允许前面有制表符
+*从标准输入读取数值：read [-options] [variable...]  不带变量则赋值到默认变量REPLY
+IFS:内部字符分隔符
+*while commands; do commands; done   同until
+*跳出循环：break continue
+*追踪: #!/bin/bash -x 或 set -x打开追踪 set +x关闭追踪 
+*case word in 
+	[pattern [| pattern]...) commands ;;]...
+esac
+模式：a)  [[:alpha:]])  ???)  *.txt)  *)
+;;&允许继续执行下一条测试
+*自带$0到$9变量，大于9的用花括号${10},显示参数个数用$#
+*shift使变量$2的值会移动到变量$1中，变量$3的值会移动到变量$2中，依次类推，变量$#的值也会相应的减1。
+*basename命令清除一个路径名的开头部分，只留下一个文件的基本名称。
+*集体位置参数：$*  $@
+*for variable [in words];do	
+	commands
+done  #shell格式
+for i in A B C D; do echo $i; done
+for i in {A..D}; do echo $i; done
+for i in distros*.txt; do echo $i; done
+for (( expression1; expression2; expression3 )); do
+	commands
+done   # C语言格式   
+for (( i=0; i<5; i=i+1 )); do 
+	echo $i
+done
+*基本参数：$a ${a}  
+空变量：${parameter:-word}  ${parameter:=word}  ${parameter:?word}  ${parameter:+word}
+变量名：${!prefix*}  ${!prefix@}
+
+
+
+
+
+
+
+
+
+
+

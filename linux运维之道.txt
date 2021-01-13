@@ -1,0 +1,478 @@
+-------------------------------------------------批量安装系统----------------------------------
+*PXE：无盘网络启动 Kickstar：无人值守自动安装
+*网络安装过程：dhcp动态获取ip，TFTP下载PXE启动文件，NFS读取centOS
+*dhcp主配置文件/etc/dhcp/dhcpd.conf，TFTP配置文件/etc/xinetd.d/tftp,NFS配置文件/etc/exports
+*/boot分区不要使用RAID阵列创建
+*图形界面问题：/etc/inittab
+*忘记root密码：单用户模式passwd root
+-------------------------------------------------命令工具-----------------------------------------------
+*pwd cd ls[-adhlcut] touch(创建或更新时间) mkdir[-p]  cp[-r]  rm[-rfi]  mv  
+*find [path] [-option] [expression]  
+option:empty group name iname mtime size type user exec a o
+find ./ size +1M -exec ls -l {} \;
+*du [-sh] 
+*cat[-bn] more less head[-n]  tail[-nf]  wc[-clw] 
+*grep [-ivw] 模式 [file]
+grep --color th test.txt
+*echo [-ne] [string]
+*软链接可以跨分区，源文件不可以删除，硬链接不可以跨分区，可将源文件删除
+ln -s /test/hello.txt /tmp/hi.txt 
+*gzip [-d] file		bzip2 [-d] file		tar [-crtx,--dele te] [-Cfjz,--remove-files] [path]    tar -czf boot.tar.gz /boot/  
+tar -xzf boot.tar.gz -C /tmp
+*history        !500执行第500条
+*which ls
+*man  info  help 
+------------------------------------------------存储管理-------------------------------------------------
+*SATA磁盘第一个逻辑分区是sda5                   
+*SATA硬盘的第一个逻辑分区是sda5
+*分区信息：fdisk -l;lsblk
+*查看文件系统类型：df -Th
+*创建分区：fdisk /dev/sdb
+*刷新读取分区：partprobe /dev/sdb
+*MBR最多4个主分区，无法创建大于2TB的分区，GPT不受此限制，使用parted工具
+*修改分区表类型：parted /dev/sdc mklabel gpt;parted /dev/sdc print
+*创建分区：parted [磁盘] mkpart 分区类型 文件系统类型 开始 结束       parted /dev/sdc mkpart primary ext3 2G 4G
+*删除分区：parted /dev/sdac rm 2
+*格式化：mkfs.ext4 /dev/sdc1   mkswap /dev/sdc2
+*挂载：mount [-ato]    mount /dev/sdc1 /d ta/   umount /dev/sdc1   
+*格式化接触占用： dmsetup status
+*开机挂载：/etc/fstab
+*LVM:物理卷PV,卷组VG，物理长度PE，逻辑卷LV
+*pvcreate,vgcreate,lvcreate,lvextend,lvrmove,vgremove,pvremove
+*RAID 0:带化，无校验备份，利用率100%，至少两块盘
+*RAID 1:镜像无校验，最安全，写效率降低，读效率上升，利用率50%
+*RAID 2:位级别海明码校验带化，至少3块，允许其中任意一块坏
+*RAID 3：字节级别,其他同RAID 2
+*RAID 4:数据块级，带化，单独校验盘，
+*RAID 5:数据块级，带化，分布式海明码校验
+*RAID 10:镜像带化，至少4块盘，利用率50%
+*创建raid：新建分区后需修改格式为fd, mdadm [模式] 选项 <raid设备>    ex. mdadm -C /dev/md1 -l 5 -n 3 -x 1 /dev/sdb2 /dev/sdc2 /dev/sdd2 /dev/sde2 
+mdadm --detail /dev/md0        mkfs.ext4 /dev/md0      mkdir /raid5      mount /dev/md0 /raid5
+echo "DEVICE /dev/sda16 /dev/sda17 /dev/sda18" > /etc/mdadm/mdadm.conf
+mdadm -Evs >> /dev/mdadm.conf    echo "/dev/md0 /raid5 ext4 defaults 0 0" >> /etc/fstab 
+测试进入/raid5目录：time dd if=/dev/zero of=txt bs=1M count=1000  
+mdadm /dev/md0 -f /dev/sda17   mdadm --detail /dev/md0
+----------------------------------------------包管理------------------------------------------
+*安装rpm -ivh xxx*.rpm
+*升级rpm -U 包名
+*卸载rpm -e ftp
+*查询rpm -q{ailcfp}
+*是否被篡改：rpm -V bash
+*yum源扩展名repo，
+*yum -y [install,update,check-update, remove,list,info,clean all,groupinstall group1,grouplist,groupremove,search string1,localinstall rpmfile1,history] 软件包
+*创建yum源：安装createrepo,软件包保存在一个目录/mtsoft/,运行createrepo /mysoft
+*源码安装：解压，./configure,make,make install
+*rpm数据库损坏：rpm --rebuilddb
+*修改系统时间：date -s "2020-08-05 12:00";hwclock -w
+*yum死锁：kill -9 pid
+*主程序管理服务：在主程序路径下执行
+*service sshd {start,stop,status,reload,condrestart}
+*查看运行级别:runlevel；改变运行级别：init n       0关机模式  1单用户模式  2无NFS字符界面模式  3全功能字符界面  5图形模式  6重启模式
+chkconfig --list sshd;chkconfig --level 15 sshd off;chkconfig sshd on
+-----------------------------------------------计划任务--------------------------------------------------
+*at一次性计划任务：service atd start;chkconfig atd on 
+*at 时间; at [-mldc] 编号        可多条任务，ctrl+D结束
+*cron周期计划任务：service crond start;chkconfig crond on
+*crontab [-u 用户] [-lrei];   crontab -e    计划脚本放在/etc/cron.*目录中
+*计划任务权限：/etc/at.allow /etc/at.deny  /etc/cron.allow /etc/cron.deny   添加用户名即可
+-----------------------------------------------性能监控--------------------------------------------------
+*yum install net-tools -y
+*系统运行时间：uptime
+*内存：free [-bkm]         
+*磁盘情况；df [-hiT]
+*网络情况：ifconfig
+*网络连接路由情况：netstat [-nutlps]
+*所有进程：ps -ef   或   ps -aux
+*动态查看进程：top [-dp]     top -d 1 -p 1,2
+*网络接口参数：ifconfig interface 选项 | 地址          
+设置IP：ifconfig eth0 192.168.109.134 netmask 255.255.255.0
+查看网卡接口:ifconfig eth0
+关闭网卡接口：ifconfig eth0 down 
+开启接口：ifconfig eth0 up 
+*主机名：hostname
+设置主机名：hostname centos.example.com
+hostname -i
+*查看路由表：route    route -n
+添加默认网关：route add default gw 192.168.0.254
+添加指定网段的网关：route add -net 172.16.0.0/16 gw 192.168.0.254
+添加路由记录：route add -net 192.56.76.0 netmask 255.255.255.0 dev eth0
+删除默认网关：route del default gw 192.168.0.254
+删除指定网段网关：route del -net 172.16.0.0/16
+*可用虚拟接口为一个物理网卡配置多个网络参数，名称一般为iface:n,如eth0:0,虚拟接口配置文件需手动创建
+*主机名参数：/etc/sysconfig/network
+*静态路由记录route-<iface-name>文件添加172.16.0.0/16 via 192.168.0.200
+*网络排错：依次ping 127.0.0.1，本地网络协议是否正常；ping本地ip，本地网络接口是否正常；ping网关，网关是否正常；ping外网
+*traceroute获取问题路由的地址，默认UDP跟踪包，若使用ICMP则用-I选项
+*检查DNS服务器：nslookup www.google.com
+*DNS信息：dig www.google.com; dig google.com MX查看邮件
+*查看网络连接状态：netstat -an 
+*查看端口开启信息：netstat -nutlp
+-----------------------------------------------------内核模块----------------------------------------------
+*存放于/lib/modules/`uname -r'/
+*查看已加载模块：lsmod
+*加载ip_vs模块：modprobe ip_vs;lsmod | grep ip_vs
+*动态卸载：modprobe -r ip_vs
+*查看内核模块：modinfo ip_vs
+*开机挂载：echo "modprobe ip_vs" >> /etc/rc.sysinit
+*开启内核路由转发：echo "1" > /proc/sys/net/ipv4/ip_forward
+*禁止ICMP回包：echo "1" > /proc/sys/net/ipv4/icmp_echo_ignore_all
+*进程可打开文件总数：echo "108248" >/proc/sys/fs/file-max
+*永久生效修改/etc/sysctl.conf   sysctl -p生效
+-------------------------------------------------bash---------------------------------------------------------
+*清空历史：history -c    调用最后一次ssh开头的指令：!ssh    定位调用：！n    搜索历史：Ctrl+r 
+*别名 alias h5 = 'head -5'  取消别名:unalias h5
+*标准输入文件描述符0，标准输出1，错误输出2
+*>创建或覆盖  >>追加  2> 错误   2>>   <从文件输入
+*rpm -qa | grep gcc
+*echo "pass" | passwd --stdin tom 
+*mail -s test xx@gmail.com < list.txt
+*ls -l abd install.log >> all 2&>1;ls -l abd install.log &> all
+*ctrl+a首 ctrl+e尾  ctrl+u删至首  ctrl+k删至尾 ctrl+z挂起进程
+*echo "pass" | passwd --stdin root > /dev/null 屏蔽无意义信息
+*日志信息分离：id tom >> user 2>> error
+*&开启子shell：firefox &
+*ls text.txt && cat text.txt;gedit || vim
+*id Tom &> /dev/null && echo "success" || echo "no user"
+*后台运行：ctrl+z或& 查看后台：jobs  调回前台：fg <编号>
+*echo user{1,5,8}     echo {0...10...2}		chmod 777 /tmp/dir{1,2}
+-------------------------------------------------变量------------------------------------------------
+*定义变量：name=[value]，未指定值则为空 
+*调用变量：echo $name
+*设置变量属性：typeset -r name
+*预定义变量：declare INT_NUMBER;typeset -i INT_NUMBER;INT_NUMBER=200
+*标准输入读取变量：read P_NUMBER；read -p "please enter a number:" p_NUMBER
+*查看系统中所有变量：set
+*删除变量：unset P_NUMBER
+*name=[value]变量仅在当前shell有效，子进程不继承，可通过export转为环境变量
+*重要变量：BASHPID,GROUPS,HOSTNAME,PWD,OLDPWD,RANDOM,UID,HISTIZE,HOME,PATH,PS1,PS2
+*PATH追加 PATH=$PATH:/root
+*位置参数$1-9,$#(参数个数),$*,$@,$$(当前进程id),$?(执行情况)
+*USER=$(head -1 /etc/passwd)
+*数组变量:A[0]=11;A[1]=22;echo ${A[0]};echo ${A[*]}  或  B=(aa bb cc);echo ${B[0]}
+*算术：$((x**y))
+*测试命令：test -d /etc/ && echo "Y" || echo "N"     测试表达式：[ -e /etc/passewd ] && echo "Y" || echo "N";  [10 -ge 22] && echo "Y" || echo "N"
+*转义\,行尾用\可换行
+*双引号不能屏蔽` \ $
+*反引号命令替换：echo "today is `date +%D`" ;echo "today is $(date +%D)"
+------------------------------------------------正则表达式----------------------------------------------
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+--------------------------------------------------NFS---------------------------------------------------
+*NFSv2,NFSv3,nfsV4,监听TCP 2049端口,需要NFS和rpcbind服务
+*RFC协议管理远程通信双方信息
+*/etc/exports规定哪些文件可访问NFS，格式为：共享路径 客户端主机 （选项）
+*man exports
+*NFS选项:ro,rw,sync,async,wdelay,root_squash(屏蔽root权限),no_root_squash,all_squash
+*server安装：
+yum -y install nfs-utils rpcbind
+rpm -qa | grep nfs-utils
+useradd -u 1003 jerry
+mkdir /hoem/myceph
+chmod a+w,a+x /home/myceph  
+vim /etc/exports         # /home/myceph 172.17.0.2(rw,async,no_root_squash)      
+systemctl restart rpcbind;systemctlt restart nfs; 
+chkconfig rpcbind on;chkconfig nfs on   或 systemctl enable rpcbind.service
+客户端：
+showmount -e 服务端ip
+mkdir /var/web
+useradd -u 1003 jerry  # 实际访问服务器本机账户
+mount -t nfs -o 选项 服务主机:/共享目录  /本地挂载目录 		# mount 172.17.0.2:/home/myceph /var/web
+echo "172.17.0.2:home/myceph /var/web nfs defaults 0 0 " >> /etc/fstab
+su - jerry;cd /var/web;touch 1.txt
+*命令：exportfs [-rauv]		nfsstat [-scnml]	rpcinfo [-mps]
+*防火墙可以开放固定端口允许客户端连接，无法设置随机端口规则，需编辑/etc/sysconfig/nfs
+------------------------------------------------------------Samba----------------------------------------------------
+*windows-linux，SMB/CIFS协议
+*软件：Samba,Samba-client,Samba-common
+*Samba由守护进程smbd,nmbd组成。smbd为客户端提供文件共享与打印机服务，监听TCP的139,445端口，通过smb服务启动该进程，netstat -nultp查看端口信息。nmbd提供NetBIOS名称服务，满足基于CIFS的共享访问环境，通过nmb启动进程，使用UDP 137端口
+*配置server：
+setenforce 0
+service iptables stop 或 systemctl stop iptables.service
+yum -y install samba
+vi /etc/samba/smb.conf 
+useradd -s /sbin/nologin smbuser  # 访问账号
+smbpasswd [-axde] smbuser
+service smb start;chkconfig smb on
+*windows访问：\\192.168.109.132   
+*linux访问：yum -y install samba-client 
+smbclient -L //192.168.109.132
+smbclient -U smbuser //192.168.109.132/common   # help查看指令
+mount -t cifs //192.168.109.132/common /com -o username=smbuser,password=Lz@2041cn  #本地挂载
+echo "//192.168.109.132:/common /com cifs username=smbuser,password=Lz@2041cn 0 0" >> /etc/fstab  #永久挂载
+图形化界面：nautilus-connect-server 
+00000000000000000000-----------------------------------------------网络存储服务器------------------------------------------
+*DAS:主机总线通过scsi接口与存储设备相连
+*SAN：光纤交换机将服务器和存储设备连在一起的网络环境
+*NAS：以太网交换机连接服务器和存储设备，NFS,CIFS
+*IP-SAN:IP网络进行数据存储，ISCSI
+*iscsi:ip网络传输scsi命令，使用TCP 860和3260端口
+*LUN：设备逻辑单元号  IQN:SCSI合格名称
+*yum - install scsi-target-utils
+*服务器配置文件：/etc/tgt/targets.conf
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+-----------------------------------------------------------iptables防火墙-----------------------------------------------
+*netfilter/iptables包过滤，网络地址转换，数据包管理。netfilter在内核，iptables面向用户。
+*iptables维护4个表(filter,nat,mangle,raw)和每个表5个链(INPUT,OUTPUT,FORWARD,PREROUTING,POSTROUTING)
+*iptables [-t 表名] {-A|-D|-I|-F|-L|-R|-Z|-P} 链名 rule-specification
+*匹配参数:! -p -s -d -i -o --sport --dport --src-range --dst-range --limit --mac-source -sports --dports 
+--state(INVALID,ESTABLISHED,NEW,REPLACED) --string 
+*触发动作:ACCEPT DROP REJECT LOG DNAT SNAT MASQUERADE REDIRECT
+*内核按顺序检查规则，执行第一个匹配项
+*iptables -nL --line-number
+*iptables -t nat -nL
+*iptables -A INPUT -s 192.168.0.1 -j DROP
+*iptables -I INPUT -s 192.168.0.22 -p icmp -j REJECT
+*iptables -D INPUT 1
+*iptables -R INPUT 2 ! -s 192.168.0.254  -j REJECT
+*iptables -t filter -P INPUT ACCEPT
+*iptables -I INPUT -s 192.168.0.10 -p tcp --dport 22  -j LOG
+*iptables -I INPUT -i eth0 -p tcp --dport 80 -j ACCEPT
+*协议端口对应信息:/etc/services
+*防火墙源地址(SNAT)转换需要写入NAT表的POSTROUTING链
+在/etc/sysctl.conf开启net.ipv4.ip_forward=1
+sysctl -p 重新加载内核配置
+iptables -t nat -I PSOTROUTING -s 192.168.0.0/24 -j SNAT --to-source 124.126.199.84
+*iptables -t nat -I PREROUTING -d 124.126.199.84 -p tcp --dport 80 -j DNAT --to-destination 192.168.0.100
+*iptables -A OUTPUT -f -d 192.168.1.1 -j DROP 丢弃发送至192所有的数据和分片
+*iptables -I INPUT -m limit  --limit  500/sec -j ACCEPT;iptables -P INPUT DROP
+*iptables -I FORWARD -m string --algo bm --string "/etc/passwd" -j REJECT
+*iptables -A INPUT -m state --state NEW  -j DROP   #拒绝入站新连接
+*iptables -A INPUT -m state --state ESTABLISHED,REPLACED -j ACCEPT #放行已有连接
+*iptables -P OUTPUT ACCEPT
+*iptables -A FORWARD -m iprange --src-range 192.168.0.1-192.168.0.10 -p tcp --dport 80 -j LOG 
+iptables -A FORWARD -m iprange --src-range 192.168.0.1-192.168.0.10 -p tcp --dport 80 -j ACCEPT
+*防火墙规则备份iptables-save,还原iptables-restore
+*iptables-save > /etc/sysconfig/iptables;iptables-save > ~/iptables.bak
+*iptables-restore < ~/iptables.bak
+--------------------------------------------------------------------kvm--------------------------------------------
+*虚拟化：VMWARE,Xen,KVM,QEMU
+*支持虚拟化：
+egrep 'vmx|svm' /proc/cpuinfo
+lsmod | grep kvm   # BIOS开启虚拟化
+modprobe kvm
+modprobe kvm-intel
+ll /dev/kvm
+yum -y install bridge-utils   # 管理网桥
+systemctl restart network
+*安装虚拟化：    #kvm主机内存不能低于4GB
+cat /etc/redhat-release 
+uname -a
+sestatus
+systecmctl status firewalld.service
+hostname -I  
+yum install libvirt* virt-* qemu-kvm* -y   # libvirt虚拟机管理,virt虚拟机安装克隆,qemu-kvm管理虚拟机磁盘   
+systemctl start libvirtd.service
+systemctl is-enabled libvirtd.service 
+virt-install --virt-type kvm --os-type=linux --os-variant rhel7 --name centos7 --memory 1024 --vcpus 1 --disk /data/clsn.raw,format=raw,size=10 --cdrom /data/CentOS-7-x86_64-DVD-1511.iso --network network=default --graphics vnc,listen=0.0.0.0,port=5900 --noautoconsole   #需要先将镜像文件拷贝到 /data/CentOS-7-x86_64-DVD-1511.iso
+virt-install --name tfa --virt-type kvm --ram 32768 --cdrom=/home/lily/centos_svn/caps/tfa_auto_tfa.iso  --disk path=/vm/ssd/tfa.img,size=50,bus=scsi     --disk path=/vm/hdd/tfa.img,size=1024,bus=scsi    --vcpu 10 --cpu host-passthrough                  --graphics vnc,listen=0.0.0.0,port=5905
+virt-install --help  #参数说明
+*常用命令：
+virsh list #在线VM
+virsh list --all #所有VM
+virsh start #开机
+virsh shutdown #软关机
+virsh destroy #强制关机
+virsh suspend #挂起，状态paused
+virsh resume #解除挂起
+virsh vncdisplay centos #vnc端口号,:0 即 为 5900 端口，以此类推 :1为5901
+virsh autostart  # 虚拟机开机启动
+virsh autostart --disable
+*vim /etc/sysconfig/libvirtd
+LIBVIRTD_CONFIG=/etc/libvirt/libvirtd.conf
+LIBVIRTD_ARGS="--listen"
+*vim /etc/libvirt/libvirtd.conf
+listen_tls = 0
+listen_tcp = 1
+tcp_port = "16509"
+listen_addr = "0.0.0.0"
+auth_tcp = "none"
+*netstat -apn | grep tcp
+*ps aux | grep libvirtd
+*修改配置：
+ll /etc/libvirt/qemu/centos7.xml   #配置文件地址
+virsh edit centos7
+virsh dumpxml centos7  > centos7.xml  #备份配置
+virsh undefine centos7    #删除主机
+virsh define centos7-off.xml #导入主机配置
+virsh domrename centos7 clsn7  对虚拟机进行重命名
+*配置console登录：
+virsh console clsn7
+grubby --update-kernel=ALL --args="console=ttyS0,115200n8";reboot
+virsh console clsn7    #退出virsh console连接的方法，使用组合键Ctrl+]即可  
+*磁盘：
+qemu-img create -f qcow2 clsn.qcow2 2G
+qemu-img info /data/clsn.raw  
+qemu-img  --help |grep convert  
+qemu-img convert -f raw -O qcow2 clsn.raw clsn.qcow2   #  转换原有磁盘格式，修改clsn7 虚拟机配置文件virsh edit clsn7 
+\rm clsn.raw   #删除原磁盘文件
+virsh attach-disk clsn7 /data/clsn7-add01.qcow2 vdb --live --cache=none --subdriver=qcow2  # 为虚拟机添加硬盘   vdb第二块硬盘  --live热添加  --subdriver 驱动类型
+virsh --help |grep disk 
+virsh detach-disk clsn7  vdb   # 分离磁盘
+qemu-img resize clsn7-add01.qcow2 +1G
+mkfs.xfs /dev/vdb  #虚拟机中操作
+*快照：raw格式的磁盘无法创建快照
+virsh snapshot-create clsn7
+virsh snapshot-list  clsn7
+virsh snapshot-info  clsn7 --snapshotname 1516607756
+ls -1|egrep -v 'proc|sys|run' |rm -rf   #虚拟机中操作删除快照
+virsh snapshot-revert clsn7 --snapshotname 1516607756  #还原快照
+virsh snapshot-delete  clsn7 --snapshotname 1516607756  # 删除快照
+*克隆： virt-clone --auto-clone -o clsn7 
+*桥接网络： virsh iface-bridge eth0 br0
+*修改网络配置 ：virsh edit clsn7 
+*宿主机网桥：brctl show 
+*防火墙规则:iptables -t nat  -nvL
+---------------------------------------------------------------sed----------------------------------
+a ：新增
+c ：取代
+d ：删除
+i ：插入
+p ：打印
+s ：取代 1,20s/old/new/g 
+sed  's/properties/property/g'  build.xml > build.xml.tmp
+sed  -i 's/properties/property/g'  build.xml   #覆盖源文件
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*   
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,71 @@
+----------------------------转码------------------------------------
+s1 = '\u7f51\u7edc\u5168\u6d41\u91cf\u6eaf\u6e90\u53ca\u5206\u6790\u7cfb\u7edf'
+print(s1)   #直接输出中文
+s2 = '网络全流量溯源及分析系统'
+r = s2.encode('unicode_escape')
+---------------------------------megacli-----------------------------------
+RAID Level        : Primary-1, Secondary-0, RAID Level Qualifier-0"         #代表Raid 1
+RAID Level        : Primary-0, Secondary-0, RAID Level Qualifier-0"         #代表Raid 0
+RAID Level        : Primary-5, Secondary-0, RAID Level Qualifier-3"         #代表Raid 5
+RAID Level        : Primary-1, Secondary-3, RAID Level Qualifier-0"         #代表Raid10
+RAID Level        : Primary-6, Secondary-0, RAID Level Qualifier-3 		    # raid 6
+
+MegaCli -cfgdsply -aALL
+MegaCli -LDInfo -Lall -aALL 
+MegaCli -PDList -aALL
+MegaCli -AdpAllInfo -aALL 
+MegaCli64 -Version -Pd -a0  显示所有物理磁盘
+MegaCli64 -ShowSummary -a0
+-----------------------------------xlrd----------------------------------------
+sheet.cell(1,2)  #2行3列
+-----------------------------------xlwt-----------------------------
+workbook = xlwt.Workbook()
+worksheet = workbook.add_sheet('test')
+worksheet.write(0,0,'a')
+workbook.save('excelwrite.xls')
+---------------------------------threading----------------------------------
+*Python程序启动时，Python解释器会启动一个继承自threading.Thread的threading._MainThread线程对象作为主线程
+*threading.active_count()：返回当前存活的threading.Thread线程对象数量，等同于len(threading.enumerate())。
+*threading.current_thread()：返回此函数的调用者控制的threading.Thread线程对象。如果当前调用者控制的线程不是通过threading.Thread创建的，则返回一个功能受限的虚拟线程对象。
+*threading.get_ident()：返回当前线程的线程标识符。注意当一个线程退出时，它的线程标识符可能会被之后新创建的线程复用。
+*threading.enumerate()：返回当前存活的threading.Thread线程对象列表。
+*threading.main_thread()：返回主线程对象，通常情况下，就是程序启动时Python解释器创建的threading._MainThread线程对象。
+*threading.stack_size([size])：返回创建线程时使用的堆栈大小
+*线程对象：threading.Thread(group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None)
+start()，run(),join(timeout=None),is_alive(),daemon表示该线程是否是守护线程，True或者False。
+
+--------------------------------selenium------------------------------
+drive = webdriver.Chrome()
+drive.get('http://www.baidu.com')
+get_attribute('textContent')
+get_attribute('innerHTML')
+get_attribute('outerHTML')
+drive.find_element_by_id("kw").send_keys("selenium python")
+drive.find_element_by_id("su").click() 
+drive.find_element_by_name("wd").send_keys("英语")
+drive.find_elements_by_tag_name('input')[0].send_keys('python')
+drive.find_element_by_class_name('s_ipt').send_keys('selenium')
+driver.find_elements_by_class_name("classname")[n] 
+driver.find_element_by_link_text('免费课程').click()
+driver.find_element_by_partial_link_text('后端').click()  # 通过部分文字定位
+（1） find_element_by_css_selector（）
+（2） #id                              id 选择器根据 id 属性来定位元素
+（3） .class                          class 选择器，根据 class 属性值来定位元素
+（4） [attribute=’value’]       根据属性来定位元素
+（5） element>element       根据元素层级来定位 父元素>子元素
+driver.find_element_by_css_selector('.s_ipt').send_keys('selenium')
+driver.find_element_by_css_selector("[autocomplete='off']").send_keys('python') 
+driver.find_element_by_css_selector('form#form>span>input').send_keys('6666')
+driver.find_element_by_css_selector("html>body>div>input[value='查询']")
+driver.find_element_by_css_selector(".spread")
+driver.find_element_by_css_selector("#div1nput")
+driver.find_element_by_css_selector('img[alt="div1-img1"][href="http://www.sogou.com"]')
+driver.find_element_by_css_selector('div#div1>input#div1input')	
+
+
+
+
+
+
+
+

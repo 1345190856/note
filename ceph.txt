@@ -1,0 +1,74 @@
+[ceph-noarch]
+name=Ceph noarch packages
+baseurl=http://download.ceph.com/rpm-jewel/el7/noarch
+enabled=1
+gpgcheck=1
+type=rpm-md
+gpgkey=https://download.ceph.com/keys/release.asc
+priority=2
+
+1.超时：换国内仓库
+2.ceph-deploy new无法加入路径：purge之后本目录不存在
+
+
+
+yum install ceph-deploy
+ceph-deploy new machloop
+ceph-deploy install machloop --repo-url=http://mirrors.aliyun.com/ceph/rpm-luminous/el7/ --gpg-url=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+ceph --version
+# ceph-deploy purgedata machloop;ceph-deploy purge machloop
+ceph-deploy mon create-initial;ceph mon stat
+ceph-deploy gatherkeys nceph  
+ceph-deploy disk list machloop 
+ceph-deploy disk zap machloop /dev/sdb
+ceph-deploy osd create --bluestore machloop --data /dev/sdb
+ceph osd tree
+ceph osd pool create bluepool 128;ceph osd lspools
+ceph osd pool get bluepool pg_num
+ceph osd dump | grep size|grep bluepool
+ceph osd pool set bluepool pg_num 256;ceph osd pool set bluepool pgp_num 128
+ceph osd pool get bluepool size;ceph osd pool set bluepool size 3
+-----------------------------------------------------RBD-------------------------------------
+rbd create block1 --size 100G -p bluepool
+rbd ls bluepool -l 
+rbd info block1 -p bluepool
+rbd resize --size 4096 bluepool/block1 --allow-shrink
+rbd map --image bluepool/block1   # rbd feature disable bluepool/block1 exclusive-lock object-map fast-diff deep-flatten
+rbd showmapped
+mkfs.xfs  mount
+rbd unmap /dev/rbd0
+rbd rm bluepool/block1
+
+ 
+----------------------------------------------------rados------------------------------------
+rados -p bluepool ls
+rados df
+rados lspools
+rados -p bluepool ls
+rados -p rbd put 
+rados -p bluepool put block1 1.txt
+rados -p bluepool get block1 
+-------------------------------------------------- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

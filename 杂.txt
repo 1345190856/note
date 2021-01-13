@@ -1,0 +1,15 @@
+*查看ip:ip addr
+*查看路由：ip route
+*重启网络：systemctl restart network.service  或 service network restart
+*找不到网卡： service NetworkManager stop;systemctl start network
+*克隆虚拟机后需关机下生成网卡，获取IP
+*查看端口：netstat -lnp|grep 要查看的端口号
+*释放80端口：lsof -i :80|grep -v "PID"|awk '{print "kill -9",$2}'|sh
+*安装指定版本yum --showduplicates list PACKAGE | expand
+*设置vim tab：set ts=4
+*vim自动补全：ctrl+n
+*更新pip:python3 -m pip install --upgrade pip
+*sublime多行编辑：ctrl+shift+L
+*notepad多行编辑：Alt
+*vim区块缩进：visual模式<,>
+*vim多行注释 ctrl+v I esc

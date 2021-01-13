@@ -1,0 +1,17 @@
+*=OFFSET($A$1,,(ROW(1:1)-1)*12+COLUMN(A:A)-1）
+*excel文本清洗函数：FIND("k",A1,1),LEFT(A1,2), RIGHT(A1,2),SUBSTITUDE(A1,B1,""), MID(A1,起始位,2), TEXT(), CONCATENATE(A1,"k"), TRIM(A1), REPLACE(A1,1,2,"k"), LEN(A1), A1&"K"拼接
+*关联匹配函数：VLOOKUP(id,工作表1!A:B,2,FALSE), INDEX(S2:S8,1,1), MATCH(数值,S2:S8,0), INDEX(S2:T8,MATCH(S2,S2:S8,0),2), ROW(),COLUMN(), OFFSET(S2,1,1,1,1), HYPELINK(www.baidu.com)
+*逻辑运算函数：AND(TRUE,FALSE), OR(TRUE,FALSE), TRUE+TRUE+FALSE=2, IF(Q2>10,IF(R1="你好","yes","no"),"低"), ISNUMBER(),ISERROR( )
+*计算统计函数：SUM(), SUMPRODUCT(Q2:Q7,R2:R7), COUNT(Q2:Q7), MAX(Q:Q), MIN(Q:Q), RANK(Q2,Q:Q), RANDBTWEEN(1,10), RAVERAGE(Q:Q), QUARTILE(Q:Q,1), 标准差STDEV(Q:Q), SUBTOTAL(), INT(),ROUND(Q2,2), COUNTIF(Q:Q,">10"), COUNTIFS(Q:Q,">20",R:R,"3年"), SUMIF(R:R,"=应届生",Q:Q), AVERAGEIF(Q:Q,"<10",Q:Q)
+*时间函数：YEAR(),MONTH(),DAY(), WEEKDAY(Q1,2), WEEKNUM(Q1,2),NOW(), TODAY(),DATE(年,月,日)
+*快捷键：Ctrl+方向键（光标快速移动）Ctrl+Shift+方向键（快速框选）Ctrl+空格键（选定整列）Shift+空格键（选定整行）Ctrl+A（选择整张表）Alt+Enter（换行） 数据——>分列——>其他   条件格式——>数据条  插入——>数据透视表——>切片器
+*工具：数据——>数据分析——>描述统计
+*数据——>根据所选内容创建
+*数据——>数据验证——>序列（下拉菜单）
+*插入——>折线（迷你图）
+*等级划分：LOOKUP(R2,{0,5,10,20),{1,2,3,4})
+*三方库：conda install
+*查询类型：dtype    格式转换:astype  
+*Pandas数据结构：Series(允许多种数据类型，字符索引加引号)  DataFrame  Panel   
+*散点图 折线图 柱形图 饼图 漏斗图 雷达图 树形图 桑基图 热力图 关系图 箱线图 标靶图 词云图
+

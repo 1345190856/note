@@ -153,12 +153,51 @@ chmod +x /usr/local/bin/docker-compose
 *Docker Machine是 Docker 官方提供的一个工具，它可以帮助我们在远程的机器上安装 Docker，或者在虚拟机 host 上直接安装虚拟机并在虚拟机中安装 Docker。我们还可以通过 docker-machine命令来管理这些虚拟机和 Docker。
 *sudo curl -L https://github.com/docker/machine/releases/download/v0.13.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine
 sudo chmod +x /usr/local/bin/docker-machine
+*docker-machine create -d virtualbox test
 *docker-machine create -d generic \
     --generic-ip-address=123.59.188.19 \
     --generic-ssh-user=root \
     --generic-ssh-key ~/.ssh/id_rsa \
     dev
+*docker-machine ls
+*docker-machine env test  #后续操作对象都是test主机
+*docker-machine ssh test
+*docker-machine COMMAND --help
+---------------------------------------------------------docker swarm-------------------------------------------
+*Swarm是使用SwarmKit构建的 Docker 引擎内置（原生）的集群管理和编排工具.用户可以将多个 Docker 主机封装为单个大型的虚拟 Docker 主机，快速打造一套容器云平台。
+*运行 Docker 的主机可以主动初始化一个 Swarm 集群或者加入一个已存在的 Swarm 集群，这样这个运行 Docker 的主机就成为一个 Swarm 集群的节点 (node) 。节点分为管理 (manager) 节点和工作 (worker) 节点。
+*任务（Task）是 Swarm 中的最小的调度单位，目前来说就是一个单一的容器；服务（Services）是指一组任务的集合，服务定义了任务的属性，服务有两种模式：
+replicated services按照一定规则在各个工作节点上运行指定个数的任务。
+global services每个工作节点上运行一个任务
+*docker-machine create -d virtualbox manager
+*docker swarm init   #管理节点初始化
+*docker-machine create -d virtualbox worker1
+*docker-machine ssh worker1
+*docker node ls
+*docker service ls
+*docker service create --replicas 3 -p 80:80 --name nginx nginx:1.13.7-alpine
+*docker service ps nginx
+*docker service rm nginx
+*docker stack deploy -c docker-compose.yml wordpress
+*docker stack ls
+*docker stack down
+--------------------------------------------------多阶段构建----------------------------------
+*使用多阶段构建，你可以在一个 Dockerfile 中使用多个 FROM 语句。每个 FROM 指令都可以使用不同的基础镜像，并表示开始一个新的构建阶段。你可以很方便的将一个阶段的文件复制到另外一个阶段，在最终的镜像中保留下你需要的内容即可
+*FROM golang AS build-env
+ADD . /go/src/app
+WORKDIR /go/src/app
+RUN go get -u -v github.com/kardianos/govendor
+RUN govendor sync
+RUN GOOS=linux GOARCH=386 go build -v -o /go/src/app/app-server
 
+FROM alpine
+RUN apk add -U tzdata
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai  /etc/localtime
+COPY --from=build-env /go/src/app/app-server /usr/local/bin/app-server
+EXPOSE 8080
+CMD [ "app-server" ]
+*docker build -t cnych/docker-multi-stage-demo:latest .
+*docker run --rm -p 8080:8080 cnych/docker-multi-stage-demo:latest
 
 
 

@@ -1,0 +1,68 @@
+-------------------------------------------------------html5----------------------------------------
+*URL:http(s),ftp,mailto
+*http请求方法：GET,POST,HEAD,PUT,DELETE,TRACE,CONNECT,OPTIONS
+*状态码:200,301,304(缓存），404,500
+*HTTP缺陷：中间人攻击，DNS劫持   
+*<!doctype html>
+*单标记元素闭合前加/，HTML5可不加，XHTML必须加
+*<meta charset="utf-8" />
+*<img src="a.jpg" width="100" height="200" />
+*<link rel="stylesheet" type="text/css" href="some.css" />  定义样式规则
+*常用全局属性：id, class, style, title
+*<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />   定义document的icon
+*<meta name="keywords" content="keyword1,keyword2,keyword3" /> 	  
+*<meta name="description" content="how to describe a document" />   
+*<style type="text/css">css rules here</style>  定义样式规则
+*<script type="text/javascript" src="some.js"></script>   <script type="text/javascript">js code here</script>
+*<h1>,<h2>,<h3>,<h4>,<h5>,<h6>,<p>,<br>,<hr>
+*<b></b>, <i></i>, <strong></strong>, <em></em>,<small></small>, <del></del>, <ins>underline</ins>
+*<image src="/img/a.jpg" width="100" height="200" alt="if load fail" />   注意相对路径与绝对路径表示
+*<a href="http://weibo.com">weibo</a>    <a href="http://weibo.com" target="_blank"><img src="" /></a>  target打开新页面    <a href="mailto:134510856@qq.com">Email to me</a>   <a href="#faq">文档内导航</a> <a href="#botton-section">去底部</a>  <a href="#">去顶部</a>                  <a href="http://abc.com/course/202#faq">先到给定网址再展现#faq指定内容</a>
+*无序列表：<ul><li></li><li></li></ul>  有序列表<ol><li></li><li></li></ol>   表示线性数据结构，<li>中嵌套<ul>,<ol>表示数型数据结构
+*<table>表示二维数据结构，<caption>,<tr>,<th>,<td>,按行分组<thead>,<tbody>,<tfoot>按列分组<colgroup>,<col>
+*块级容器<div> 行内容器<span>
+*<form action="/course/reg.do" method="post" enctype="multipart/form-data>创建表单，action制定提交后的脚本处理，enctype为文件上传的编码方式，<input type="text" />单行输入,<textarea></textarea>多行输入,<input type="file"/>上传文件，<input type="submit" value="提交" />
+*分段元素：<body>,<nav>,<article>,<section>,<aside>,每个分段元素都可有独立的<header>,<footer>
+-----------------------------------------------------------------css3----------------------------------------------
+*引入css：文档内样式<style></style>，元素行内样式通过元素属性style，外部文档样式<link rel="stylesheet" type="text/css" href="common.css">
+*类型选择器（body,a,ul,ol,p,table等），id选择器#，类选择器.
+*.a.b表示同时含有ab类
+*属性选择器语法：E[foo],E[foo="bar"],E[foo~="bar"],E[foo^="bar"],E[foo$="bar"],E[foo*="bar"],E[foo|="en"] 
+*上下文选择器：e1 e2(e1所有e2)	e1>e2(e1子代e2)	e1~e2(一般同胞)	e1+e2(紧邻同胞)	*
+*伪类选择器：结构化伪类选择器（first-child、last-child、nth-child(num)）,UI伪类选择器（a:visited、a:link、e:hover、e:focus、e:checked、e:active、e:target）
+*伪选择器：E::first-letter, E::first-line, E::after, E::before
+*级联Cascading：特指度id>class>type   ！important提升规则优先级
+*继承：父元素的属性继承到子元素，注意属性是否可继承 
+*font属性：font-family(serif,sans-serif,monospace,cursive,fantasy),font-size,font-style,font-weight,font(简写属性，必须含font-size,font-family属性值)
+*text属性：color(red,rgb(255,0,0),#ff0000),text-indent(32px,一个中文字符占16px),letter-spacing(8px),word-spacing(8px),line-height(16px),text-decoration(underline,overline,line-through),text-align,vertical-align
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*

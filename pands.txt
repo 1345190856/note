@@ -1,0 +1,9 @@
+gcc   -Wall t4.c -g -lsdk  -fpic -shared -o libt2.so  -lsdk -lpthread
+
+split -2000000 a.txt new 
+data=pandas.read_csv('newaa',sep='\t',index_col=False,names=['id','time','label'])
+data.to_csv('new.csv',header=1,index=None,encoding='utf_8_sig')
+
+
+timeArray = time.localtime(1462482700)#秒数
+otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
