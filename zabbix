@@ -1,0 +1,22 @@
+*rpm -ivh https://mirrors.tuna.tsinghua.edu.cn/zabbix/zabbix/4.0/rhel/7/x86_64/zabbix-release-4.0-1.el7.noarch.rpm    #rpm -Uvh https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.el7.noarch.rpm
+*修改为阿里云源，yum clean all
+*yum -y install yum-utils
+*yum-config-manager --enable rhel-7-server-optional-rpms
+*yum install zabbix-server-mysql zabbix-agent  -y
+*yum install centos-release-scl -y
+*[zabbix-frontend]   enabled=1    
+yum install zabbix-web-mysql-scl zabbix-apache-conf-scl -y
+*mysql -uroot -p
+create database zabbix character set utf8 collate utf8_bin;
+create user zabbix@localhost identified WITH mysql_native_password by 'kasumi';
+grant all privileges on zabbix.* to zabbix@localhost;
+*zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p zabbix 
+*vi /etc/zabbix/zabbix_server.conf   DBPassword=kasumi
+*vi etc/opt/rh/rh-php72/php-fpm.d/zabbix.conf   php_value[date.timezone] = Asia/shanghai
+*systemctl restart zabbix-server zabbix-agent httpd rh-php72-php-fpm
+*systemctl enable zabbix-server zabbix-agent httpd rh-php72-php-fpm 
+*http://server_ip_or_name/zabbix
+
+
+
+ 

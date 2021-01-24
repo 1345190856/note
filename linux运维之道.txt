@@ -320,6 +320,13 @@ listen_addr = "0.0.0.0"
 auth_tcp = "none"
 *netstat -apn | grep tcp
 *ps aux | grep libvirtd
+*nat网络：
+virsh net-destroy default
+virsh net-undefine default
+virsh net-start default
+virsh net-dumpxml default
+virsh net-define  /etc/libvirt/qemu/networks/default.xml 
+virsh net-edit default
 *修改配置：
 ll /etc/libvirt/qemu/centos7.xml   #配置文件地址
 virsh edit centos7
@@ -349,7 +356,7 @@ virsh snapshot-info  clsn7 --snapshotname 1516607756
 ls -1|egrep -v 'proc|sys|run' |rm -rf   #虚拟机中操作删除快照
 virsh snapshot-revert clsn7 --snapshotname 1516607756  #还原快照
 virsh snapshot-delete  clsn7 --snapshotname 1516607756  # 删除快照
-*克隆： virt-clone --auto-clone -o clsn7 
+*克隆： virt-clone --auto-clone -o clsn7;  virt-clone --connect qemu:///system --original master --name node1 --file /vm/node1/k8s.raw --mac 52:54:00:34:11:54
 *桥接网络： virsh iface-bridge eth0 br0
 *修改网络配置 ：virsh edit clsn7 
 *宿主机网桥：brctl show 
@@ -363,7 +370,6 @@ p ：打印
 s ：取代 1,20s/old/new/g 
 sed  's/properties/property/g'  build.xml > build.xml.tmp
 sed  -i 's/properties/property/g'  build.xml   #覆盖源文件
-*
 *
 *
 *
