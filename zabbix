@@ -16,7 +16,20 @@ grant all privileges on zabbix.* to zabbix@localhost;
 *systemctl restart zabbix-server zabbix-agent httpd rh-php72-php-fpm
 *systemctl enable zabbix-server zabbix-agent httpd rh-php72-php-fpm 
 *http://server_ip_or_name/zabbix
-
+*修改/etc/mail.rc
+set from=liuzhuang@machloop.com smtp=smtp.exmail.qq.com
+set smtp-auth-user=liuzhuang@machloop.com smtp-auth-password=Lz@2041cn
+set smtp-auth=login
+set ssl-verify=ignore
+*客户端安装源   
+rpm -Uvh https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.el7.noarch.rpm
+yum install -y zabbix-agent
+vi /etc/zabbix/zabbix_agentd.conf
+ServeR=10.0.0.181
+ServerActive=10.0.0.181
+setenforce 0
+systemctl start zabbix-agent
+systemctl enable zabbix-agent
 
 
  
