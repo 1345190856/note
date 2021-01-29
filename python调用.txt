@@ -16,6 +16,12 @@ MegaCli -PDList -aALL
 MegaCli -AdpAllInfo -aALL 
 MegaCli64 -Version -Pd -a0  显示所有物理磁盘
 MegaCli64 -ShowSummary -a0
+MegaCli64 -CfgLdDel -L2 -A0  删除raid
+/MegaCli64 CfgLDAdd -r5 [41:5,41:6,41:7,41:8,41:9,41:10,41:11,41:12,41:13,41:14] -strpsz128 -A0  创建raid
+MegaCli64 -pdlist -a0|grep -Ei "enc|Slot Number|Firmware stat|media error |other error"
+MegaCli64 LDSetProp WB -Lall -Aall    write through 改成 write back
+
+
 -----------------------------------xlrd----------------------------------------
 sheet.cell(1,2)  #2行3列
 -----------------------------------xlwt-----------------------------

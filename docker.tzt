@@ -1,0 +1,237 @@
+--------------------------------------------install----------------------------------
+sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+yum list docker-ce --showduplicates | sort -r
+sudo yum install docker-ce-<VERSION_STRING> docker-ce-cli-<VERSION_STRING> containerd.io
+sudo yum install docker-ce docker-ce-cli containerd.io
+curl -sSL https://get.daocloud.io/daotools/set_mirror.sh | sh -s http://f1361db2.m.daocloud.io  #?μ???ó?ù
+sudo systemctl start docker
+sudo docker run hello-world
+--------------------------------------------概念---------------------------
+*底层技术支持：Namespaces（做隔离）、CGroups（做资源限制）、UnionFS（镜像和容器的分层） the-underlying-technology Docker 底层架构分析
+*docker engine包括：CLI->REST API->dockerd
+*Docker Damon：dockerd，用来监听 Docker API 的请求和管理 Docker 对象，比如镜像、容器、网络和 Volume。
+*Docker Client：docker，docker client 是我们和 Docker 进行交互的最主要的方式方法
+*Docker Registry：用来存储 Docker 镜像的仓库
+*Images：镜像是一个只读模板
+*Containers：容器是一个镜像的可运行的实例，容器启动时创建一层可写层作为最上层,可以使用 Docker REST API 或者 CLI 来操作容器
+--------------------------------------------操作------------------------
+docker pull [选项] [Docker Registry 地址[:端口]/]仓库名[:标签]
+*docker run -it --rm ubuntu:16.04 /bin/bash   
+*docker image ls
+*docker system df
+*docker run ubuntu:16.04 /bin/echo 'Hello world'
+*docker run -dit ubuntu:16.04
+*docker container ls -a   
+*docker container start ID 
+*docker run -d ubuntu:16.04 /bin/sh -c "while true; do echo hello world; sleep 1; done"   
+*docker container logs ID
+*docker container stop ID
+*docker exec -it ID bash  #进入
+*docker attach ID  #进入
+*docker container rm ID
+*docker container prune 或 docker ps -aq   #清理掉所有处于终止状态的容器。
+*docker rmi image_id   #删除前用docker rm 删除依赖于此镜像的所有容器
+*docker run --name webserver -d -p 80:80 nginx
+*docker diff webserver  
+*docker commit --author "lz" --message "修改" webserver nginx:v2  
+*docker history nginx:v2
+*docker run --name webserv2 -d -p 81:80 nginx:v2   # http://localhost:81
+*docker	tag	5db5f8471261 ouruser/sinatra:devel  #修改标签
+*docker push ouruser/sinatra  #docker hub注册后推送镜像
+*docker save -o ubuntu_14.04.tar	ubuntu:14.04
+*sudo docker load --input  ubuntu_14.04.tar
+*docker save <镜像名> | bzip2 | pv | ssh <用户名>@<主机名> 'cat | docker load'
+-----------------------------------------------dockerfile------------------------
+dockerfile: 构建镜像
+docker run: 启动容器
+docker-compose: 启动服务
+*指令：
+FROM    构建镜像基于的镜像
+MAINTAINER   维护者
+RUN   shell命令
+COPY   拷贝文件到镜像
+ENV    
+USER   RUN,CMD,ENTRYPOINT运行的用户
+EXPOSE   暴露端口
+HEALTHCHECK   服务健康检查
+WORKDIR
+ENTRYPOINT   多个命令时最后一个生效
+CMD   多个命令时最后一个生效
+*echo -e "net.ipv4.ip_forward = 1\nnet.ipv4.conf.default.rp_filter = 0 \nnet.ipv4.conf.all.rp_filter = 0" >> /etc/sysctl.conf   # 构建容器前先开启内核路由转发,否则创建的容器无法连接网络
+sysctl -p 
+*实例1：
+mkdir   /root/nginx-dockerfile   && cd   /root/nginx-dockerfile
+cat Dockerfile << EOF
+FROM centos:7
+MAINTAINER lz 
+COPY ./CentOS-Base.repo  /etc/yum.repos.d/  
+RUN yum install -y gcc gcc-c++ make \
+    openssl-devel pcre-devel gd-devel \
+    iproute net-tools telnet wget curl && \
+    yum clean all && \
+    rm -rf /var/cache/yum/*
+RUN wget http://nginx.org/download/nginx-1.15.5.tar.gz && \
+    tar zxf nginx-1.15.5.tar.gz && \
+    cd nginx-1.15.5 &&\
+    ./configure --prefix=/usr/local/nginx \
+    --with-http_ssl_module \
+    --with-http_stub_status_module && \
+    make -j 4 && make install && \
+    rm -rf /usr/local/nginx/html/* && \
+    echo "ok" >> /usr/local/nginx/html/status.html && \
+    cd / && rm -rf nginx-1.12.2* && \
+    ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ENV PATH $PATH:/usr/local/nginx/sbin   #声明环境变量
+#COPY nginx.conf /usr/local/nginx/conf/nginx.conf    #拷贝项目nginx配置
+WORKDIR /usr/local/nginx   设置工作目录
+EXPOSE 80      指定端口
+CMD ["nginx", "-g", "daemon off;"]
+docker run -d   --name  nginx01  -p  88:80 nginx:v1
+curl http://192.168.106.100:88/status.html
+--------------------------------------------------------私有仓库-------------------------------------------------
+*docker login 
+*docker logout
+*docker search centos
+*docker pull centos
+*docker tag ubuntu:17.10 username/ubuntu:17.10
+*docker run -d -p 5000:5000 --restart=always --name registry registry   #使用官方的registry镜像来启动私有仓库,仓库会被创建在容器的/var/lib/registry目录下, -v 参数来将镜像文件存放在本地的指定路径。例如下面的例子将上传的镜像放到本地的 /opt/data/registry 目录。
+docker run -d -p 5000:5000 -v /opt/data/registry:/var/lib/registry registry
+*docker tag ubuntu:latest 127.0.0.1:5000/ubuntu:latest
+*docker push 127.0.0.1:5000/ubuntu:latest
+*私有仓库设置，/etc/docker/daemon.json中写入:
+{
+  "registry-mirror": [
+    "https://registry.docker-cn.com"
+  ],
+  "insecure-registries": [
+    "192.168.199.100:5000"
+  ]
+}
+----------------------------------------------------数据共享---------------------------
+*数据卷、挂载主机目录
+*数据卷是一个可供一个或多个容器使用的特殊目录，它绕过UFS,可以在容器之间共享和重用,对数据卷的修改会立马生效,对数据卷的更新，不会影响镜像，数据卷默认会一直存在，即使容器被删除
+*docker volume create my-vol
+*docker volume ls
+*docker volume inspect my-vol  
+*docker run -d -P --name web --mount source=my-vol,target=/webapp training/webapp python app.py
+*docker volume rm my-vol 
+*docker volume prune
+*docker run -d -P --name web  -v /src/webapp:/opt/webapp:ro  training/webapp python app.py   #挂载主机目录,只读
+*docker run --rm -it --mount type=bind,source=$HOME/.bash_history,target=/root/.bash_history ubuntu:17.10 bash  #挂载单个文件
+-----------------------------------------------网络模式---------------------------------------
+*Docker进程启动时，会在主机上创建一个名为docker0的虚拟网桥，此主机上启动的Docker容器会连接到这个虚拟网桥上。从docker0子网中分配一个 IP 给容器使用，并设置 docker0 的 IP 地址为容器的默认网关。bridge模式是 docker 的默认网络模式。
+*docker run -tid --net=bridge --name docker_bri1 ubuntu-base:v3 docker run -tid --net=bridge --name docker_bri2 ubuntu-base:v3 
+*docker network create -d bridge my-net
+*docker run -it --rm --name busybox1 --network my-net busybox sh
+*docker run -it --rm --name busybox2 --network my-net busybox sh
+*ping busybox1
+*如果启动容器的时候使用host模式,容器将不会虚拟出自己的网卡，配置自己的 IP 等，而是使用宿主机的 IP 和端口
+*docker run -tid --net=host --name docker_host1 ubuntu-base:v3
+*docker exec -ti docker_host1 /bin/bash
+*container模式指定新创建的容器和已经存在的一个容器共享一个 Network Namespace，两个容器的进程可以通过 lo 网卡设备通信
+*docker run -tid --net=container:docker_bri1 --name docker_con1 ubuntu-base:v3
+*none模式，Docker 容器拥有自己的 Network Namespace，但是，并不为Docker 容器进行任何网络配置
+------------------------------------------------docker compose------------------------------------------
+*服务 (service)：一个应用的容器，实际上可以包括若干运行相同镜像的容器实例。
+*项目 (project)：由一组关联的应用容器组成的一个完整业务单元，在 docker-compose.yml 文件中定义。
+*二进制安装：
+sudo curl -L https://github.com/docker/compose/releases/download/1.17.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo rm /usr/local/bin/docker-compose  #删除 
+*pip安装，arm架构：
+sudo pip install -U docker-compose
+curl -L https://raw.githubusercontent.com/docker/compose/1.8.0/contrib/completion/bash/docker-compose > /etc/bash_completion.d/docker-compose
+sudo pip uninstall docker-compose
+*容器安装
+curl -L https://github.com/docker/compose/releases/download/1.8.0/run.sh > /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+*docker-compose [-f=<arg>...] [options] [COMMAND] [ARGS...]
+-f, --file FILE 指定使用的 Compose 模板文件，默认为 docker-compose.yml，可以多次指定。
+-p, --project-name NAME 指定项目名称，默认将使用所在目录名称作为项目名。
+--x-networking 使用 Docker 的可拔插网络后端特性
+--x-network-driver DRIVER 指定网络后端的驱动，默认为 bridge
+--verbose 输出更多调试信息。
+-v, --version 打印版本并退出。
+*docker-compose kill -s SIGINT
+*docker-compose run ubuntu ping docker.com
+*docker-compose run --no-deps web python manage.py shell  #不启动关联容器
+*docker-compose scale web=3 db=2
+------------------------------------------------------docker machine--------------------------------------
+*Docker Machine是 Docker 官方提供的一个工具，它可以帮助我们在远程的机器上安装 Docker，或者在虚拟机 host 上直接安装虚拟机并在虚拟机中安装 Docker。我们还可以通过 docker-machine命令来管理这些虚拟机和 Docker。
+*sudo curl -L https://github.com/docker/machine/releases/download/v0.13.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine
+sudo chmod +x /usr/local/bin/docker-machine
+*docker-machine create -d virtualbox test
+*docker-machine create -d generic \
+    --generic-ip-address=123.59.188.19 \
+    --generic-ssh-user=root \
+    --generic-ssh-key ~/.ssh/id_rsa \
+    dev
+*docker-machine ls
+*docker-machine env test  #后续操作对象都是test主机
+*docker-machine ssh test
+*docker-machine COMMAND --help
+---------------------------------------------------------docker swarm-------------------------------------------
+*Swarm是使用SwarmKit构建的 Docker 引擎内置（原生）的集群管理和编排工具.用户可以将多个 Docker 主机封装为单个大型的虚拟 Docker 主机，快速打造一套容器云平台。
+*运行 Docker 的主机可以主动初始化一个 Swarm 集群或者加入一个已存在的 Swarm 集群，这样这个运行 Docker 的主机就成为一个 Swarm 集群的节点 (node) 。节点分为管理 (manager) 节点和工作 (worker) 节点。
+*任务（Task）是 Swarm 中的最小的调度单位，目前来说就是一个单一的容器；服务（Services）是指一组任务的集合，服务定义了任务的属性，服务有两种模式：
+replicated services按照一定规则在各个工作节点上运行指定个数的任务。
+global services每个工作节点上运行一个任务
+*docker-machine create -d virtualbox manager
+*docker swarm init   #管理节点初始化
+*docker-machine create -d virtualbox worker1
+*docker-machine ssh worker1
+*docker node ls
+*docker service ls
+*docker service create --replicas 3 -p 80:80 --name nginx nginx:1.13.7-alpine
+*docker service ps nginx
+*docker service rm nginx
+*docker stack deploy -c docker-compose.yml wordpress
+*docker stack ls
+*docker stack down
+--------------------------------------------------多阶段构建----------------------------------
+*使用多阶段构建，你可以在一个 Dockerfile 中使用多个 FROM 语句。每个 FROM 指令都可以使用不同的基础镜像，并表示开始一个新的构建阶段。你可以很方便的将一个阶段的文件复制到另外一个阶段，在最终的镜像中保留下你需要的内容即可
+*FROM golang AS build-env
+ADD . /go/src/app
+WORKDIR /go/src/app
+RUN go get -u -v github.com/kardianos/govendor
+RUN govendor sync
+RUN GOOS=linux GOARCH=386 go build -v -o /go/src/app/app-server
+
+FROM alpine
+RUN apk add -U tzdata
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai  /etc/localtime
+COPY --from=build-env /go/src/app/app-server /usr/local/bin/app-server
+EXPOSE 8080
+CMD [ "app-server" ]
+*docker build -t cnych/docker-multi-stage-demo:latest .
+*docker run --rm -p 8080:8080 cnych/docker-multi-stage-demo:latest
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
