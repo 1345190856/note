@@ -1,0 +1,31 @@
+wps:：
+yum install mesa-libGLU
+yum install libXss* -y
+
+百度云缺静态库：
+strings /lib64/libstdc++.so.6 | grep GLIBC
+find / -name libstdc++.so.6*
+
+wireshark:
+yum search wireshark
+yum install 
+命令行启动
+
+声卡：
+lspci -v|grep Audio
+www.alsa-project.org   alsa-driver   alsa-lib   alsa-utils
+yum install kernel-devel   #查看/usr/src/kernel是否有源码
+ln -s  /usr/src/kernels/3.10.0-1160.11.1.el7.x86_64/include/generated/uapi/linux/version.h /usr/src/kernels/3.10.0-1160.11.1.el7.x86_64/include/linux/   #老驱动找不到文件
+
+蓝牙：
+lsusb
+hciconfig
+
+
+jdk:
+tar -zxvf /var/ftp/pub/jdk-8u191-linux-x64.tar.gz
+vi /etc/profile
+export JAVA_HOME=/usr/local/jdk1.8.0_191
+export CLASSPATH=$JAVA_HOME/lib:$JRE_HOME/lib:
+export PATH=$JAVA_HOME/bin:$PATH
+source /etc/profile
