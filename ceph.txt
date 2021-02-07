@@ -1,3 +1,8 @@
+----------------------------------------概念--------------------------------------
+*Ceph OSDs: Ceph OSD 守护进程（ Ceph OSD ）的功能是存储数据，处理数据的复制、恢复、回填、再均衡，并通过检查其他OSD 守护进程的心跳来向 Ceph Monitors 提供一些监控信息
+*Monitors: Ceph Monitor维护着展示集群状态的各种图表，包括监视器图、 OSD 图、归置组（ PG ）图、和 CRUSH 图
+*MDSs: Ceph 元数据服务器（ MDS ）为 Ceph 文件系统存储元数据
+-----------------------------------install------------------------------
 [ceph-noarch]
 name=Ceph noarch packages
 baseurl=http://download.ceph.com/rpm-jewel/el7/noarch
@@ -9,8 +14,6 @@ priority=2
 
 1.超时：换国内仓库
 2.ceph-deploy new无法加入路径：purge之后本目录不存在
-
-
 
 yum install ceph-deploy
 ceph-deploy new machloop

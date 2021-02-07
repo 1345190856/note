@@ -1,0 +1,16 @@
+----------------------------------syslog---------------------
+yum install -y rsyslog*
+vi /etc/rsyslog.conf      $ModLoad imudp      $UDPServerRun 514
+vi /etc/sysconfig/rsyslog           SYSLOGD_OPTIONS="-m 0 -r"
+systemctl restart rsyslog 
+日志保存在 /var/log/devicelog/
+----------------------------------snmp--------------------------
+ntpdate 202.120.2.101
+yum -y install net-snmp net-snmp-utils
+vi /etc/snmp/snmpd.conf 常用配置：community; sec.model：安全模式，可选值为v1/v2c/usm/any
+systemctl start snmpd.service
+systemctl enable snmpd.service
+netstat -ntulp | grep 161
+snmpget -v 2c -c public localhost sysDescr.0   本地获取
+snmpwalk -v 2c -c China2020   10.0.0.192 .1.3.6.1.4.1.2021.11   #远程获取
+snmpwalk  -v 3 -u China2020 -a MD5 -A Machloop@123 -x AES -X Machloop@123 -l authPriv  10.0.0.192 .1.3.6.1.4.1.2021.4.11.0
