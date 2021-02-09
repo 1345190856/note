@@ -1,0 +1,144 @@
+--------------------------------简介---------------------------------
+*etcd 是一个一致的分布式可靠的键值存储技术。可被用来做配置共享和服务发现。优点：
+基于HTTP+JSON的API让你用curl就可以轻松使用。
+可选SSL客户认证机制
+每个实例每秒支持一千次写操作。
+使用Raft算法充分实现了分布式。
+*2379 作为外部客户端通信，使用 2380 作为内部服务间通信。
+*Raft：etcd所采用的保证分布式系统强一致性的算法。
+*Node：一个Raft状态机实例。
+*Member： 一个etcd实例。它管理着一个Node，并且可以为客户端请求提供服务。
+*Cluster：由多个Member构成可以协同工作的etcd集群。
+*Peer：对同一个etcd集群中另外一个Member的称呼。
+*Client： 向etcd集群发送HTTP请求的客户端。
+*WAL：预写式日志，etcd用于持久化存储的日志格式。
+*snapshot：etcd防止WAL文件过多而设置的快照，存储etcd数据状态。
+*Proxy：etcd的一种模式，为etcd集群提供反向代理服务。
+*Leader：Raft算法中通过竞选而产生的处理所有数据提交的节点。
+*Follower：竞选失败的节点作为Raft中的从属节点，为算法提供强一致性保证。
+*Candidate：当Follower超过一定时间接收不到Leader的心跳时转变为Candidate开始竞选。
+*Term：某个节点成为Leader到下一次竞选时间，称为一个Term。
+*Index：数据项编号。Raft中通过Term和Index来定位数据
+-------------------------------install------------------------------
+Linux 安装:
+curl -L https://github.com/coreos/etcd/releases/download/v3.3.1/etcd-v3.3.1-linux-amd64.tar.gz -o etcd-v3.3.1-linux-amd64.tar.gz
+tar xzvf etcd-v3.3.1-linux-amd64.tar.gz
+cd etcd-v3.3.1-linux-amd64
+sudo cp etcd /usr/local/bin/
+sudo cp etcdctl /usr/local/bin/
+docker 安装：
+# 使用 host IP
+export ETCD_NODE1=127.0.0.1
+# 安装 etcd
+docker run --name etcd \
+    -p 2379:2379 \
+    -p 2380:2380 \
+    --volume=etcd-data:/etcd-data \
+    quay.io/coreos/etcd:latest \
+    /usr/local/bin/etcd \
+    --data-dir=/etcd-data --name node1 \
+    --initial-advertise-peer-urls http://${ETCD_NODE1}:2380 --listen-peer-urls http://0.0.0.0:2380 \
+    --advertise-client-urls http://${ETCD_NODE1}:2379 --listen-client-urls http://0.0.0.0:2379 \
+    --initial-cluster node1=http://${ETCD_NODE1}:2380
+# 进入etcd 命令行交互
+docker exec -it etcd /bin/sh
+# 验证安装
+etcd -version
+etcdctl -version
+# 验证是否启动
+curl http://127.0.0.1:2379/version
+---------------------------------------------------配置---------------------------------
+启动参数：
+--name     etcd集群中的节点名，这里可以随意，可区分且不重复就行  
+--listen-peer-urls     监听的用于节点之间通信的url，可监听多个，集群内部将通过这些url进行数据交互(如选举，数据同步等)
+--initial-advertise-peer-urls     建议用于节点之间通信的url，节点间将以该值进行通信。
+--listen-client-urls    监听的用于客户端通信的url,同样可以监听多个。
+--advertise-client-urls    建议使用的客户端通信url,该值用于etcd代理或etcd成员与etcd节点通信。
+--initial-cluster-token etcd-cluster-1     节点的token值，设置该值后集群将生成唯一id,并为每个节点也生成唯一id,当使用相同配置文件再启动一个集群时，只要该token值不一样，etcd集群就不会相互影响。
+--initial-cluster   也就是集群中所有的initial-advertise-peer-urls 的合集
+--initial-cluster-state new      新建集群的标志
+
+单机启动：
+etcd -listen-client-urls="http://0.0.0.0:2379" --advertise-client-urls="http://0.0.0.0:2379"
+curl -L  http://127.0.0.1:2379/version
+ETCDCTL_API=3 etcdctl get --prefix=true ""
+ETCDCTL_API=3 etcdctl put /testdir/testkey "你好 etcd"
+*etcdctl set /testdir/testkey "Hello etcd"
+--ttl '0'                该键值的超时时间（单位为秒），不配置（默认为 0）则永不超时
+--swap-with-value value  若该键现在的值是 value，则进行设置操作
+--swap-with-index '0'    若该键现在的索引值是指定索引，则进行设置操作
+*etcdctl get /testdir/testkey
+--sort       对结果进行排序
+--consistent 将请求发给主节点，保证获取内容的一致性	
+*etcdctl update /testdir/testkey "你好 etcd"
+--ttl '0'    该键值的超时时间（单位为秒），不配置（默认为 0）则永不超时
+*etcdctl rm /testdir/testkey --with-value "Hello etcd"    
+--dir            删除空目录或键值对
+--recursive, -r  删除当前键及其子键(当为目录时)
+--with-value     当值匹配时删除
+--with-index '0' 当索引匹配时删除
+*etcdctl ls -r -p
+--sort         将输出结果排序
+--recursive    如果目录下有子目录，则递归输出其中的内容
+-p             对于输出为目录，在最后添加 / 进行区分
+Etcd构建集群三种形式:
+静态发现: 预先已知 Etcd 集群中有哪些节点，在启动时直接指定好Etcd的各个node节点地址
+Etcd动态发现: 通过已有的Etcd集群作为数据交互点，然后在扩展新的集群时实现通过已有集群进行服务发现的机制
+DNS动态发现: 通过DNS查询方式获取其他节点地址信息
+3个节点都编辑run.sh执行
+#!/usr/bin/env bash
+ETCD_NAME=node-1
+LOCAL_IP=10.211.55.2
+ETCD_DATA_DIR=/usr/local/etcd/data
+INITIAL_CLUSTER_TOKEN=cqh-test-cluster  #初始化名称
+INITIAL_CLUSTER="node-1=http://10.211.55.2:2380,node-2=http://10.211.55.25:2380,node-3=http://10.211.55.26:2380"
+INITIAL_CLUSTER_STATE=new  #初始化状态
+etcd --name ${ETCD_NAME} --data-dir ${ETCD_DATA_DIR} \
+    --initial-advertise-peer-urls http://${LOCAL_IP}:2380 \
+    --listen-peer-urls http://${LOCAL_IP}:2380 \
+    --listen-client-urls http://${LOCAL_IP}:2379,http://127.0.0.1:2379 \
+    --advertise-client-urls http://${LOCAL_IP}:2379 \
+    --initial-cluster-token ${INITIAL_CLUSTER_TOKEN} \
+    --initial-cluster ${INITIAL_CLUSTER} \
+    --initial-cluster-state ${INITIAL_CLUSTER_STATE}
+etcdctl member list
+etcdctl set /cqh muscle
+etcdctl watch /cqh 
+etcdctl watch key -f
+etcdctl exec-watch key -- sh -c 'pwd'  #监听到值有变化，就执行指定的命令
+curl http://10.211.55.25:2379/v2/keys/cqh -XPUT -d value="陈琼和1"   
+curl http://10.211.55.25:2379/v2/keys/gym -XPUT -d dir=true
+curl http://10.211.55.25:2379/v2/keys/cqh
+curl http://10.211.55.25:2379/v2/keys/hero -XPUT -d value="超人" -d ttl=5
+curl http://10.211.55.25:2379/v2/keys/fitness -XPOST -d value="bench_press"
+curl http://10.211.55.25:2379/v2/keys/fitness -XPOST -d value="dead_lift"
+curl http://10.211.55.25:2379/v2/keys/fitness -XPOST -d value="deep_squat"
+curl http://10.211.55.25:2379/v2/keys/fitness
+curl http://10.211.55.25:2379/v2/keys/cqh -XDELETE
+curl http://10.211.55.25:2379/v2/members
+curl http://10.211.55.25:2379/v2/stats/leader
+curl http://10.211.55.26:2379/v2/stats/self
+curl http://10.211.55.26:2379/v2/stats/store
+搭建etcd-browser:   
+docker run --rm  -d --name etcd-browser \
+-p 8000:8000 \
+--env ETCD_HOST=10.211.55.25 \
+--env ETCD_PORT=2379 \
+buddho/etcd-browser
+搭建etcdkeeper:  #etcdkeeper支持v3的api
+docker run -it -d --name etcdkeeper \
+-p 8080:8080 \
+deltaprojects/etcdkeeper
+http://10.211.55.25:8080/etcdkeeper
+
+
+
+
+
+
+
+
+
+
+
+
