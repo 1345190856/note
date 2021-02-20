@@ -1,3 +1,4 @@
+---------------------------------install------------------------------------
 yum install cyrus-sasl cyrus-sasl-gssapi cyrus-sasl-plain krb5-libs libcurl libpcap lm_sensors-libs net-snmp net-snmp-agent-libs openldap openssl rpm-libs tcp_wrappers-libs
 wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-4.0.10.tgz
 tar -xzvf mongodb-linux-x86_64-4.0.10.tgz -C /mongo/
@@ -6,4 +7,100 @@ echo "export PATH=\$PATH:/mongo/mongodb/bin" >> ~/.bashrc
 source ~/.bashrc
 mongo --version
 mkdir -p /mongo/mongodb/data/{configServer,shard}   && mkdir -p /mongo/mongodb/{log,pid}
+
+https://www.jb51.net/article/63552.htm
+--------------------------------介绍--------------------
+NO.	关系型数据库	NOSQL 数据库
+1	数据库			数据库 （类似于 MySQL）
+2	表				集合
+3	行				文档
+4	列				成员
+5	主键			Object ID （自动维护的）
+-------------------------------操作---------------------------
+/mongo/mongodb/bin/mongod --dbpath=/mongo/mongodb/data/ --logpath=/mongo/mongodb/log/mongodb.log  --logappend     默认端口号是27017
+show dbs
+show collections
+show users
+use <db name>
+db.help()
+db.foo.help()：foo指的是当前数据库下，一个叫foo的集合
+db.foo.find()
+db.foo.find( { a : 1 } )
+创建一个“myTest”的数据库，先运行use myTest命令，之后就做一些操作（如：db.createCollection('user')）
+db.dropDatabase()
+db.cloneDatabase(“127.0.0.1”); 将指定机器上的数据库的数据克隆到当前数据库
+db.copyDatabase("mydb", "temp", "127.0.0.1");将本机的mydb的数据复制到temp数据库中
+db.repairDatabase()
+db.getName()
+db.stats()
+db.version()
+db.createCollection(“collName”, {size: 20, capped: 5, max: 100})
+db.getCollection("account")
+db.getCollectionNames()
+db.printCollectionStats()
+db.addUser("name")
+db.addUser("userName", "pwd123", true)
+db.auth("userName", "123123");
+show users;
+db.removeUser("userName");
+db.getPrevError()
+db.yourColl.count()
+db.userInfo.dataSize()
+db.userInfo.totalSize()
+db.userInfo.getShardVersion()
+db.userInfo.renameCollection("users")
+db.userInfo.drop()
+db.userInfo.find()
+db.userInfo.distinct("name")
+db.userInfo.find({age: {$gt: 22}})
+db.userInfo.find({age: {$lte: 25}})
+db.userInfo.find({name: /mongo/});  #查询name中包含 mongo的数据
+db.userInfo.find({name: /^mongo/})
+db.userInfo.find().sort({age: 1})
+db.userInfo.find().limit(5)
+db.userInfo.find().skip(10)
+db.userInfo.find().limit(10).skip(5)
+db.userInfo.find({$or: [{age: 22}, {age: 25}]})
+db.userInfo.find({age: {$gte: 25}}).count()
+db.userInfo.ensureIndex({name: 1});
+db.userInfo.getIndexes()
+db.userInfo.totalIndexSize()
+db.users.dropIndex("name_1");
+db.users.dropIndexes()
+db.users.save({name: 'zhangsan', age: 25, ***: true});
+db.users.update({age: 25}, {$set: {name: 'changeName'}}, false, true);
+db.users.update({name: 'Lisi'}, {$inc: {age: 50}}, false, true)
+db.users.remove({age: 132})
+db.users.findAndModify({
+  query: {age: {$gte: 25}}, 
+  sort: {age: -1}, 
+  update: {$set: {name: 'a2'}, $inc: {age: 2}},
+  remove: true
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
