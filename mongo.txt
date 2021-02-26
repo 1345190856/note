@@ -77,7 +77,32 @@ db.users.findAndModify({
   update: {$set: {name: 'a2'}, $inc: {age: 2}},
   remove: true
 });
-
+db.users.findAndModify({
+  query: {age: {$gte: 25}}, 
+  sort: {age: -1}, 
+  update: {$set: {name: 'a2'}, $inc: {age: 2}},
+  remove: true
+});
+db.runCommand({ findandmodify : "users", 
+  query: {age: {$gte: 25}}, 
+  sort: {age: -1}, 
+  update: {$set: {name: 'a2'}, $inc: {age: 2}},
+  remove: true
+});
+tojson(new Object());
+for (var i = 0; i < 30; i++) {
+db.users.save({name: "u_" + i, age: 22 + i, ***: i % 2});
+};
+var cursor = db.users.find();
+while (cursor.hasNext()) { 
+  printjson(cursor.next()); 
+}
+db.users.find().forEach(printjson);
+var cursor = db.users.find();
+cursor[4];
+var arr = db.users.find().toArray();
+printjson(arr[2]);
+db.users.find({age: {$lte: 28}}, {age: 1}).forEach(printjson);
 
 
 

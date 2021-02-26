@@ -39,10 +39,18 @@ workbook.save('excelwrite.xls')
 *threading.stack_size([size])：返回创建线程时使用的堆栈大小
 *线程对象：threading.Thread(group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None)
 start()，run(),join(timeout=None),is_alive(),daemon表示该线程是否是守护线程，True或者False。
-
 --------------------------------selenium------------------------------
 drive = webdriver.Chrome()
 drive.get('http://www.baidu.com')
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')  # 跳过HTTPS风险提示
+options.add_argument('--ignore-ssl-errors')  # 忽略握手失败错误消息
+drive.maximize_window()
+file_input = driver.find_element_by_name('profilePic')
+file_input.send_keys('path/to/profilepic.gif')
+submit() - 提交表单
+
+
 get_attribute('textContent')
 get_attribute('innerHTML')
 get_attribute('outerHTML')
