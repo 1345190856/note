@@ -7,11 +7,11 @@ sudo yum makecache fast
 yum list docker-ce --showduplicates | sort -r
 sudo yum install docker-ce-<VERSION_STRING> docker-ce-cli-<VERSION_STRING> containerd.io
 sudo yum install docker-ce docker-ce-cli containerd.io
-vi /etc/docker/
+tee /etc/docker/daemon.json << EOF
 {
   "registry-mirrors": ["https://7kkphbuy.mirror.aliyuncs.com"]
 }
-
+EOF
 sudo systemctl start docker
 sudo docker run hello-world
 --------------------------------------------概念---------------------------
@@ -129,7 +129,7 @@ docker run -d -p 5000:5000 -v /opt/data/registry:/var/lib/registry registry
 *docker volume create my-vol
 *docker volume ls
 *docker volume inspect my-vol  
-*docker run -d -P --name web --mount source=my-vol,target=/webapp centos:7 bash 
+*docker run -d -P --name web --mount source=my-vol,target=/webapp ubuntu:16.04 bash
 *docker volume rm my-vol 
 *docker volume prune
 *docker run -d -P --name web  -v /src/webapp:/opt/webapp:ro  training/webapp python app.py   #挂载主机目录,只读
@@ -138,14 +138,15 @@ docker run -d -p 5000:5000 -v /opt/data/registry:/var/lib/registry registry
 *Docker进程启动时，会在主机上创建一个名为docker0的虚拟网桥，此主机上启动的Docker容器会连接到这个虚拟网桥上。从docker0子网中分配一个 IP 给容器使用，并设置 docker0 的 IP 地址为容器的默认网关。bridge模式是 docker 的默认网络模式。主机上创建一对虚拟网卡veth pair设备，Docker 将 veth pair 设备的一端放在新创建的容器中，并命名为eth0（容器的网卡），另一端放在主机中，以vethxxx这样类似的名字命名，并将这个网络设备加入到 docker0 网桥中。
 *virbr0 是 KVM 默认创建的一个 Bridge，其作用是为连接其上的虚机网卡提供 NAT 访问外网的功能。
 *docker run -tid --net=bridge --name docker_bri1 ubuntu-base:v3 docker run -tid --net=bridge --name docker_bri2 ubuntu-base:v3 
-*docker network create -d bridge my-net   #-d参数指定 Docker 网络类型，有 bridge overlay Host container none 
+*docker network create -d bridge my-net
 *docker run -it --rm --name busybox1 --network my-net busybox sh
 *docker run -it --rm --name busybox2 --network my-net busybox sh
 *ping busybox1
 *如果启动容器的时候使用host模式,容器将不会虚拟出自己的网卡，配置自己的 IP 等，而是使用宿主机的 IP 和端口
-*docker run -tid --net=host --name docker_host1 ubuntu:16.04
+*docker run -tid --net=host --name docker_host1 ubuntu-base:v3
+*docker exec -ti docker_host1 /bin/bash
 *container模式指定新创建的容器和已经存在的一个容器共享一个 Network Namespace，两个容器的进程可以通过 lo 网卡设备通信
-*docker run -tid --net=container:docker_bri1 --name docker_con1 ubuntu:16.04
+*docker run -tid --net=container:docker_bri1 --name docker_con1 ubuntu-base:v3
 *none模式，Docker 容器拥有自己的 Network Namespace，但是，并不为Docker 容器进行任何网络配置
 ------------------------------------------------docker compose------------------------------------------
 *服务 (service)：一个应用的容器，实际上可以包括若干运行相同镜像的容器实例。
@@ -159,10 +160,8 @@ sudo pip install -U docker-compose
 curl -L https://raw.githubusercontent.com/docker/compose/1.8.0/contrib/completion/bash/docker-compose > /etc/bash_completion.d/docker-compose
 sudo pip uninstall docker-compose
 *容器安装
-curl -L https://github.com/docker/compose/releases/download/1.8.0/run.sh > /usr/local/bin/docker-compose  或 curl -L https://get.daocloud.io/docker/compose/releases/download/1.24.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+curl -L https://github.com/docker/compose/releases/download/1.8.0/run.sh > /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
-*卸载
-sudo rm /usr/local/bin/docker-compose  或 sudo pip uninstall docker-compose  
 *docker-compose [-f=<arg>...] [options] [COMMAND] [ARGS...]
 -f, --file FILE 指定使用的 Compose 模板文件，默认为 docker-compose.yml，可以多次指定。
 -p, --project-name NAME 指定项目名称，默认将使用所在目录名称作为项目名。
@@ -170,8 +169,6 @@ sudo rm /usr/local/bin/docker-compose  或 sudo pip uninstall docker-compose
 --x-network-driver DRIVER 指定网络后端的驱动，默认为 bridge
 --verbose 输出更多调试信息。
 -v, --version 打印版本并退出。
-*docker-compose -d 
-*docker-compose build [options] [SERVICE...]
 *docker-compose kill -s SIGINT
 *docker-compose run ubuntu ping docker.com
 *docker-compose run --no-deps web python manage.py shell  #不启动关联容器
@@ -180,18 +177,15 @@ sudo rm /usr/local/bin/docker-compose  或 sudo pip uninstall docker-compose
 *Docker Machine是 Docker 官方提供的一个工具，它可以帮助我们在远程的机器上安装 Docker，或者在虚拟机 host 上直接安装虚拟机并在虚拟机中安装 Docker。我们还可以通过 docker-machine命令来管理这些虚拟机和 Docker。
 *sudo curl -L https://github.com/docker/machine/releases/download/v0.13.0/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine
 sudo chmod +x /usr/local/bin/docker-machine
-*docker-machine create -d virtualbox test
-*docker-machine create --driver virtualbox --help
+docker-machine create -d virtualbox test
+*curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-centos7 > /usr/local/bin/docker-machine-driver-kvm
+chmod +x /usr/local/bin/docker-machine-driver-kvm
+docker-machine create -d kvm test
 *docker-machine create -d generic \
     --generic-ip-address=123.59.188.19 \
     --generic-ssh-user=root \
     --generic-ssh-key ~/.ssh/id_rsa \
     dev
-参数：
---engine-opt dns=114.114.114.114配置 Docker 的默认 DNS
---engine-registry-mirror https://registry.docker-cn.com配置 Docker 的仓库镜像
---virtualbox-memory 2048 配置主机内存
---virtualbox-cpu-count 2 配置主机 CPU
 *docker-machine ls
 *docker-machine env test  #后续操作对象都是test主机
 *docker-machine ssh test
@@ -231,7 +225,25 @@ EXPOSE 8080
 CMD [ "app-server" ]
 *docker build -t cnych/docker-multi-stage-demo:latest .
 *docker run --rm -p 8080:8080 cnych/docker-multi-stage-demo:latest
-
+--------------------------------------------------docker实践---------------------------------------
+*使用 Dockerfile 构建镜像时最好是将 Dockerfile 放置在一个新建的空目录下。然后将构建镜像所需要的文件添加到该目录中。目录下新建一个.dockerignore文件来指定要忽略的文件和目录
+*保证在一个容器中只运行一个进程
+*只有 RUN、COPY 和 ADD 指令会创建层，其他指令会创建临时的中间镜像，但是不会直接增加构建的镜像大小
+*想在构建过程中使用缓存，你可以在 docker build 命令中使用--no-cache=true选项
+*FROM 尽可能使用当前官方仓库作为你构建镜像的基础。推荐使用Alpine镜像，因为它被严格控制并保持最小尺寸（目前小于 5 MB），但它仍然是一个完整的发行版。
+*LABEL com.example.version="0.0.1-beta"   空格必须被转义
+*RUN apt-get update 和 apt-get install 组合成一条 RUN 声明
+*CMD ["executable", "param1", "param2"...]
+*EXPOSE指令用于指定容器将要监听的端口
+*ENV PATH /usr/local/nginx/bin:$PATH来确保CMD ["nginx"]
+*COPY 只支持简单将本地文件拷贝到容器中，而 ADD 有一些并不明显的功能（比如本地 tar 提取和远程 URL 支持）。因此，ADD的最佳用例是将本地 tar 文件自动提取到镜像中，例如ADD rootfs.tar.xz。
+*为了让镜像尽量小，最好不要使用 ADD 指令从远程 URL 获取包，而是使用 curl 和 wget。这样你可以在文件提取完之后删掉不再需要的文件来避免在镜像中额外添加一层
+*ENTRYPOINT的最佳用处是设置镜像的主命令
+*VOLUME指令用于暴露任何数据库存储文件，配置文件
+*USER 指令切换到非 root 用户。先在 Dockerfile 中使用类似 RUN groupadd -r postgres && useradd -r -g postgres postgres 的指令创建用户和用户组。
+*WORKDIR中使用绝对路径
+----------------------------------------------------docker 项目---------------------------------
+https://www.spug.dev/docs/install-docker/
 
 
 

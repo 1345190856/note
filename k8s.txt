@@ -1,0 +1,170 @@
+---------------------------------------------install-----------------------------------------------
+*vim /etc/hostname
+*vi /etc/hosts
+*systemctl stop firewalld && systemctl disable firewalld
+*sestatus:disabled
+*yum install docker-ce-18.09.9-3.el7 docker-ce-cli-18.09.9-3.el7 containerd.io
+*cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=http://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg http://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+exclude=kube*
+EOF
+*yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes*
+*systemctl enable kubelet && systemctl start kubelet*
+*cat <<EOF >  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system
+*kubeadm config print init-defaults > kubeadm-init.yaml
+将advertiseAddress: 1.2.3.4修改为本机地址
+将imageRepository: k8s.gcr.io修改为imageRepository: registry.cn-hangzhou.aliyuncs.com/google_containers
+*kubeadm config images pull --config kubeadm-init.yaml
+*kubeadm init --config kubeadm-init.yaml
+*kubeadm join 192.168.110.128:6443 --token abcdef.0123456789abcdef --discovery-token-ca-cert-hash sha256:62e5a13e71cbd6b51a71fb19799c4af651ce9004e60ba6bdbda9bdd7f7b699ca 
+*mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+*wget https://docs.projectcalico.org/v3.8/manifests/calico.yaml
+cat kubeadm-init.yaml | grep serviceSubnet:   将192.168.0.0/16修改为10.96.0.0/12
+kubectl apply -f calico.yaml
+*kubectl get node
+kubectl get pods --all-namespaces
+查看token：kubeadm token list
+生成token：kubeadm token create
+获取CA证书hash：openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+排错：journalctl -f -u kubelet;kubectl describe nodes;systemctl status kubelet
+卸载节点：kubectl drain <node name> --delete-local-data --force --ignore-daemonsets
+删除节点：kubectl delete node <node name>
+重置节点：kubeadm reset
+----------------------------------------概念------------------------------------
+*Pod 是一组紧密关联的容器集合，它们共享 PID、IPC、Network 和 UTS namespace，是Kubernetes 调度的基本单位
+*Label 是识别 Kubernetes 对象的标签，以 key/value 的方式附加到对象上。Label 定义好后其他对象可以使用 Label Selector 来选择一组相同 label 的对象（比如Service 用 label 来选择一组 Pod）。Label Selector支持以下几种方式：
+等式，如app=nginx和env!=production
+集合，如env in (production, qa)
+多个label（它们之间是AND关系），如app=nginx,env=test
+*Namespace 是对一组资源和对象的抽象集合，比如可以用来将系统内部的对象划分为不同的项目组或用户组。常见的 pods, services,deployments 等都是属于某一个 namespace 的（默认是default），而 Node, PersistentVolumes 等则不属于任何 namespace。
+*Deployment 需要指定两个东西：
+Pod模板：用来创建 Pod 副本的模板
+Label标签：Deployment 需要监控的 Pod 的标签。
+*Service 是应用服务的抽象，通过 labels 为应用提供负载均衡和服务发现。匹配 labels 的Pod IP 和端口列表组成 endpoints，由 kube-proxy 负责将服务 IP 负载均衡到这些endpoints 上。每个 Service 都会自动分配一个 cluster IP（仅在集群内部可访问的虚拟地址）和 DNS 名，其他容器可以通过该地址或 DNS 来访问服务，而不需要了解后端容器的运行。
+----------------------------------------组件-----------------------------------------------
+*Master：Master 节点是 Kubernetes 集群的控制节点，负责整个集群的管理和控制。Master 节点上包含以下组件：
+kube-apiserver：集群控制的入口，提供 HTTP REST 服务。负责 etcd 存储的所有操作
+kube-controller-manager：Kubernetes 集群中所有资源对象的自动化控制中心，比如故障检测、自动扩展、滚动更新等；
+kube-scheduler：负责 Pod 的调度，按照预定的调度策略将 Pod 调度到相应的机器上
+etcd 保存了整个集群的状态，就是一个数据库
+*Node 节点上包含以下组件：
+kubelet：负责 Pod 的创建、启动、监控、重启、销毁等工作，同时与 Master 节点协作，实现集群管理的基本功能，同时也负责 Volume（CSI）和网络（CNI）的管理；
+kube-proxy：为 Service 提供 cluster 内部的服务发现和负载均衡。负责随时与 apiserver 进行通信，apiserver 需要保存各个 node 信息，它需要保存在 etcd 中。kube-proxy 一旦发现某个 service 后端的 pod 地址发生改变，那么就由 kube-proxy 负责在本地将地址写入 iptables 或者 ipvs 规则中。
+*ReplicaSet：是 Pod 副本的抽象，用于解决 Pod 的扩容和伸缩
+*Deployment：Deployment 表示部署，在内部使用ReplicaSet 来实现。可以通过 Deployment 来生成相应的 ReplicaSet 完成 Pod 副本的创建
+*Service 定义了服务的访问入口，服务的调用者通过这个地址访问 Service 后端的 Pod 副本实例。Service 通过 Label Selector 同后端的 Pod 副本建立关系。它是一个 iptables dnat 规则，或者 ipvs 规则，所以是 ping 不通的,可以通过 Service 的名称解析为 Service 的 IP 地址一般格式: svcname.namespace.svc.cluster.local
+*kube-dns 负责为整个集群提供 DNS 服务
+*Container runtime 负责镜像管理以及 Pod 和容器的真正运行（CRI）
+*Ingress Controller 为服务提供外网入口
+*Heapster 提供资源监控
+*Dashboard 提供 GUI
+-------------------------------------Controller------------------------------------
+*RelicationController:控制同一类 POD 对象的副本数量，实现程序的滚动更新，或者回滚的操作。在滚动更新时候，允许临时超出规定的副本数量，
+*RelicaSet:副本集控制器，它不直接使用，它有一个声明式中心控制器 Deployment
+*Deployment:它只能管理无状态的应用，这个控制器，支持二级控制器，例如：HPA（Horizontal Pod Autoscaler，水平 POD 自动伸缩控制器），当负载高的时候，自动启动更多的 POD。
+*StatefulSet:管理有状态的应用
+*DaemonSet:如果需要在每一个 node 上运行一个副本，而不是随意运行
+*Job:运行一次性作业，时间不固定的操作，例如：备份、清理，临时启动一个 POD 来进行备份的任务，运行完成就结束了。如果运行时候 JOB 挂了，那么需要重新启动起来，如果运行完成了则不需要再启动了。
+*Cronjob:运行周期性作业
+--------------------------------------网络模型-----------------------------------------
+*POD网络、集群网络、节点网络
+*请求首先到达 node 网络，然后 node 网络代理至 service 网络，service 根据 iptables/ipvs 规则来转发到 pod 网络中的 pod 上。 
+*通信方式：
+同一个 POD 内的多个容器间的通信，可以通过 lo 通信直接通讯。
+POD 与 POD 通信，如果使用 flannel 所有 POD 都处于一个网络，可以跨 node 与另外的 POD 直接通信，因为使用了叠加网络。
+POD 与 Service 通信。
+--------------------------------------dashboard------------------------------------
+*kubectl apply -f https://kuboard.cn/install-script/k8s-dashboard/v2.0.0-beta5.yaml
+*kubectl apply -f dashboard-adminuser.yaml
+*grep 'client-certificate-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> kubecfg.crt
+*grep 'client-key-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> kubecfg.key
+*openssl pkcs12 -export -clcerts -inkey kubecfg.key -in kubecfg.crt -out kubecfg.p12 -name "kubernetes-client"
+*浏览器导入证书
+*https://192.168.122.168:6443/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login
+*kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
+--------------------------------------命令------------------------------
+*kubectl cluster-info
+*kubectl get componentstatuses
+*kubectl get pods -n kube-system -o wide
+*kubectl:
+基本命令：
+  create         从文件或标准输入创建资源
+  expose         获取一个复制控制器, 服务, 部署或者暴露一个 POD 将其作为新的 Kubernetes 服务公开
+  run            创建并运行特定的镜像, 创建使用 deployment 或 job 管理的容器
+  set            设置对象的特定功能, 例如发布, 每次去set 不用的image tag
+  explain        文档或者资源, 可以用来查看资源清单写法
+  get            显示一个或多个资源        kubectl get pod -o wide;kubectl get deployment
+  edit           编辑服务器上的资源
+  delete         按文件名, 标准输入, 资源和名称或资源和标签选择器删除资源        kubectl delete pods nginx
+部署命令:
+  rollout        管理资源的部署
+  scale          为部署设置新大小, ReplicaSet, Replication Controller, Job
+  autoscale      自动扩展一个部署, ReplicaSet, 或者 ReplicationController
+群集管理命令:
+  certificate    修改证书资源
+  cluster-info   显示群集信息
+  top            显示资源(CPU / 内存/ 存储)使用情况, 需要安装metrics-server
+  cordon         将节点标记为不可调度
+  uncordon       将节点标记为可调度
+  drain          设定 node 进入维护模式
+  taint          更新一个或多个节点上的污点
+故障排除和调试命令: 
+  describe       显示特定资源或资源组的详细信息    kubectl describe pod nginx
+  logs           在容器中打印容器的日志         kubectl logs nginx
+  attach         附加到正在运行的容器
+  exec           在容器中执行命令    kubectl exec nginx ls
+  port-forward   将一个或多个本地端口转发到 pod
+  proxy          运行代理到 Kubernetes API 服务器
+  cp             将文件和目录复制到容器, 和从容器复制, 跨容器复制文件
+  auth           检查授权
+高级命令:
+  diff           针对将要应用的版本的 Diff 实时版本
+  apply          通过文件名或标准输入将配置应用于资源
+  patch          使用策略合并补丁更新资源的字段
+  replace        用文件名或标准输入替换资源
+  wait           实验阶段命令: 在一个或多个资源上等待特定条件, 定义一个触发器
+  convert        在不同的API版本之间转换配置文件
+  kustomize      从目录或远程 URL 构建 kustomization 目标
+设置命令:
+  label          更新资源上的标签
+  annotate       更新资源上的注释
+  completion     命令补全相关功能
+其他命令:
+  api-resources  在服务器上打印支持的API资源
+  api-versions   以 "group/version" 的形式在服务器上打印支持的API版本
+  config         修改 kubeconfig 文件
+  plugin         提供与插件交互的实用程序
+  version        打印客户端和服务器版本信息
+*run:
+kubectl run nginx --image=nginx:latest
+kubectl run --image=nginx:alpine nginx-app --port=80
+kubectl run nginx --image=nginx --replicas=5  # 启动 5 个 POD
+kubectl run nginx --image=nginx --command -- <cmd> <arg1> ... <argN>
+kubectl run pi --schedule="0/5 * * * ?" --image=perl --restart=OnFailure -- perl -Mbignum=bpi -wle 'print bpi(2000)'
+kubectl run nginx-deploy --image=nginx --port=80 --replicas=1 --dry-run=true   #测试模式
+curl 10.244.2.2
+*
+*
+*  
+*
+*
+
+
+
+
+
+
+
+

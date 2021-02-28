@@ -5,12 +5,7 @@
 卸载节点：kubectl drain <node name> --delete-local-data --force --ignore-daemonsets
 删除节点：kubectl delete node <node name>
 重置节点：kubeadm reset
-
-
-
 kubeadm join 192.168.110.128:6443 --token abcdef.0123456789abcdef --discovery-token-ca-cert-hash sha256:62e5a13e71cbd6b51a71fb19799c4af651ce9004e60ba6bdbda9bdd7f7b699ca 
-
-
 --------------------------------------------------简介-------------------------------------------------
 *docker编排工具：docker compose(单机) docker swarm(整合接口) docker mechine(初始化主机加入docker swarm)
 *kubernetes:service automation 
