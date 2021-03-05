@@ -75,10 +75,35 @@ driver.find_element_by_css_selector(".spread")
 driver.find_element_by_css_selector("#div1nput")
 driver.find_element_by_css_selector('img[alt="div1-img1"][href="http://www.sogou.com"]')
 driver.find_element_by_css_selector('div#div1>input#div1input')	
-
-
-
-
+------------------------------------requests-------------------------------
+import requests
+r = requests.get('https://api.github.com/events')
+r = requests.post('https://httpbin.org/post', data = {'key':'value'})
+r = requests.put('https://httpbin.org/put', data = {'key':'value'})
+r = requests.delete('https://httpbin.org/delete')
+r = requests.head('https://httpbin.org/get')
+payload = {'key1': 'value1', 'key2': ['value2', 'value3']}
+r = requests.get('https://httpbin.org/get', params=payload)
+print(r.url)
+r = requests.get('https://api.github.com/events')
+r.headers['Content-Type']
+r.status_code
+r.text
+r.encoding = 'ISO-8859-1'
+r.content
+r.json()
+from PIL import Image
+from io import BytesIO
+i = Image.open(BytesIO(r.content))  
+url = 'https://api.github.com/some/endpoint'
+headers = {'user-agent': 'my-app/0.0.1'}
+r = requests.get(url, headers=headers)
+files = {'file': ('report.xls', open('report.xls', 'rb'), 'application/vnd.ms-excel', {'Expires': '0'})}
+r = requests.post(url, files=files)
+cookies = dict(cookies_are='working')
+r = requests.get(url, cookies=cookies)
+r = requests.head('http://github.com/', allow_redirects=True)
+requests.get('https://github.com/', timeout=0.001)
 
 
 

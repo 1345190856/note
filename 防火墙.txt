@@ -3,6 +3,7 @@ system-view
 display interface
 interface GigabitEthernet 0/0/1
 ip address 1.1.1.1 255.255.255.0
+commit
 firewall zone untrust
 add interface GigabitEthernet 0/0/1
 dis zone untrust 
@@ -21,7 +22,14 @@ display ip routing-table
 {undo} ip route-static 192.168.4.167 255.255.255.255 10.0.0.105 track bfd-session test
 display bfd session static
 bfd test  >  shurdown 
+ip route-static track bfd session-name test admindown invalid 
 -------------------------------------ECMP--------------------------------
 ECMP是一个逐跳的基于流的负载均衡策略
 ECMP的路径选择策略有多种方法：哈希，例如根据源IP地址的哈希为流选择路径。轮询，各个流在多条路径之间轮询传输。基于路径权重，根据路径的权重分配流，权重大的路径分配的流数量更多。
-算法：
+算法：Next-hop =(lb-key % Member-count)+ base-ptr
+问题一 单链路故障导致ECMP组所有数据流被重新HASH计算.  解决：弹性HASH算法，均以最初数量进行取余运算
+问题二 HASH极化
+
+
+
+

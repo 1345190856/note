@@ -52,6 +52,10 @@ echo "DEVICE /dev/sda16 /dev/sda17 /dev/sda18" > /etc/mdadm/mdadm.conf
 mdadm -Evs >> /dev/mdadm.conf    echo "/dev/md0 /raid5 ext4 defaults 0 0" >> /etc/fstab 
 测试进入/raid5目录：time dd if=/dev/zero of=txt bs=1M count=1000  
 mdadm /dev/md0 -f /dev/sda17   mdadm --detail /dev/md0
+umount /dev/md0
+mdadm -S /dev/md0  #停止
+mdadm --misc --zero-superblock /dev/md126p1
+rm -f /etc/mdadm.conf  
 ----------------------------------------------包管理------------------------------------------
 *安装rpm -ivh xxx*.rpm
 *升级rpm -U 包名

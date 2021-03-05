@@ -1,7 +1,11 @@
-https://elasticsearch.cn/
-http://dl.elasticsearch.cn/
-
+--------------------------------------filebeat-----------------------------
+*Filebeat是用于转发和集中日志数据的轻量级传送工具。Filebeat监视您指定的日志文件或位置，收集日志事件，并将它们转发到Elasticsearch或 Logstash进行索引。Filebeat的工作方式如下：启动Filebeat时，它将启动一个或多个输入，这些输入将在为日志数据指定的位置中查找。对于Filebeat所找到的每个日志，Filebeat都会启动收集器。每个收集器都读取单个日志以获取新内容，并将新日志数据发送到libbeat，libbeat将聚集事件，并将聚集的数据发送到为Filebeat配置的输出。
+*Filebeat结构：由两个组件构成，分别是inputs（输入）和harvesters（收集器），这些组件一起工作来跟踪文件并将事件数据发送到您指定的输出，harvester负责读取单个文件的内容。harvester逐行读取每个文件，并将内容发送到输出
+*curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.7.0-linux-x86_64.tar.gz
+*配置示例文件：filebeat.reference.yml（包含所有未过时的配置项） 配置文件：filebeat.yml 
+*启动命令：./filebeat -e
 ---------------------------------------logstash----------------------------------
+*Logstash是免费且开放的服务器端数据处理管道，能够从多个来源采集数据，转换数据，然后将数据发送到您最喜欢的“存储库”中。Logstash能够动态地采集、转换和传输数据，不受格式或复杂度的影响。利用Grok从非结构化数据中派生出结构，从IP地址解码出地理坐标，匿名化或排除敏感字段，并简化整体处理过程。
 vi logstash-simple.conf
 input { stdin { } }
 output {
@@ -9,3 +13,8 @@ output {
   stdout { codec => rubydebug }
 }
 bin/logstash -f logstash-simple.conf
+--------------------------------------elasticsearch------------------------------
+*Elasticsearch是Elastic Stack核心的分布式搜索和分析引擎,是一个基于Lucene、分布式、通过Restful方式进行交互的近实时搜索平台框架
+*
+----------------------------------------kibana-------------------------------------
+Kibana是一个针对Elasticsearch的开源分析及可视化平台，用来搜索、查看交互存储在Elasticsearch索引中的数据.
