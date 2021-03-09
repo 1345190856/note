@@ -22,6 +22,8 @@ tar -xzf boot.tar.gz -C /tmp
 *history        !500执行第500条
 *which ls
 *man  info  help 
+*sed  's/properties/property/g'  build.xml > build.xml.tmp
+sed  -i 's/properties/property/g'  build.xml   #覆盖源文件
 ------------------------------------------------存储管理-------------------------------------------------
 *SATA磁盘第一个逻辑分区是sda5                   
 *SATA硬盘的第一个逻辑分区是sda5
@@ -122,6 +124,10 @@ hostname -i
 *禁止ICMP回包：echo "1" > /proc/sys/net/ipv4/icmp_echo_ignore_all
 *进程可打开文件总数：echo "108248" >/proc/sys/fs/file-max
 *永久生效修改/etc/sysctl.conf   sysctl -p生效
+*内核源码放在/usr/src/kernels
+*清理编译过程的目标文件和配置文件 make mrproper  
+*清楚中间文件  make clean
+
 -------------------------------------------------bash---------------------------------------------------------
 *清空历史：history -c    调用最后一次ssh开头的指令：!ssh    定位调用：！n    搜索历史：Ctrl+r 
 *别名 alias h5 = 'head -5'  取消别名:unalias h5
@@ -365,15 +371,7 @@ virsh snapshot-delete  clsn7 --snapshotname 1516607756  # 删除快照
 *修改网络配置 ：virsh edit clsn7 
 *宿主机网桥：brctl show 
 *防火墙规则:iptables -t nat  -nvL
----------------------------------------------------------------sed----------------------------------
-a ：新增
-c ：取代
-d ：删除
-i ：插入
-p ：打印
-s ：取代 1,20s/old/new/g 
-sed  's/properties/property/g'  build.xml > build.xml.tmp
-sed  -i 's/properties/property/g'  build.xml   #覆盖源文件
+
 *
 *
 *
