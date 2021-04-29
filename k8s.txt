@@ -42,6 +42,9 @@ kubectl get pods --all-namespaces
 卸载节点：kubectl drain <node name> --delete-local-data --force --ignore-daemonsets
 删除节点：kubectl delete node <node name>
 重置节点：kubeadm reset
+*kubectl describe cs
+vi /etc/kubernetes/manifests/kube-scheduler.yaml   和  /kube-controller-manager.yaml  去掉--port=0
+systemctl restart kubelet
 ----------------------------------------概念------------------------------------
 *Pod 是一组紧密关联的容器集合，它们共享 PID、IPC、Network 和 UTS namespace，是Kubernetes 调度的基本单位
 *Label 是识别 Kubernetes 对象的标签，以 key/value 的方式附加到对象上。Label 定义好后其他对象可以使用 Label Selector 来选择一组相同 label 的对象（比如Service 用 label 来选择一组 Pod）。Label Selector支持以下几种方式：
@@ -100,12 +103,12 @@ POD 与 Service 通信。
 *kubectl get pods -n kube-system -o wide
 *kubectl:
 基本命令：
-  create         从文件或标准输入创建资源
+  create         从文件或标准输入创建资源   kubectl create -f file.yaml
   expose         获取一个复制控制器, 服务, 部署或者暴露一个 POD 将其作为新的 Kubernetes 服务公开
   run            创建并运行特定的镜像, 创建使用 deployment 或 job 管理的容器
   set            设置对象的特定功能, 例如发布, 每次去set 不用的image tag
   explain        文档或者资源, 可以用来查看资源清单写法
-  get            显示一个或多个资源        kubectl get pod -o wide;kubectl get deployment
+  get            显示一个或多个资源        kubectl get pod -o wide;kubectl get deployment;kubectl get pods --show-labels;kubectl get rc
   edit           编辑服务器上的资源
   delete         按文件名, 标准输入, 资源和名称或资源和标签选择器删除资源        kubectl delete pods nginx
 部署命令:
@@ -148,23 +151,90 @@ POD 与 Service 通信。
   plugin         提供与插件交互的实用程序
   version        打印客户端和服务器版本信息
 *run:
-kubectl run nginx --image=nginx:latest
 kubectl run --image=nginx:alpine nginx-app --port=80
 kubectl run nginx --image=nginx --replicas=5  # 启动 5 个 POD
 kubectl run nginx --image=nginx --command -- <cmd> <arg1> ... <argN>
 kubectl run pi --schedule="0/5 * * * ?" --image=perl --restart=OnFailure -- perl -Mbignum=bpi -wle 'print bpi(2000)'
 kubectl run nginx-deploy --image=nginx --port=80 --replicas=1 --dry-run=true   #测试模式
-curl 10.244.2.2
-*
-*
-*  
-*
-*
-
-
-
-
-
-
-
-
+*expose:
+kubectl get deployments
+kubectl delete deployment nginx-deployment
+kubectl expose deployment nginx-deployment --name=nginx --port=80 --target-port=80 --protocol=TCP
+kubectl expose deployment nginx-deployment --port=80 --target-port=80 --type=NodePort  #创建service
+kubectl get service
+kubectl describe service nginx-deployment
+内部访问：nodeip+nodeport  或 VIP  或 Endpoint    外部访问：nodeip+nodeport
+kubectl delete service nginx-deployment
+*kubectl cp /tmp/foo_dir <some-pod>:/tmp/bar_dir
+*kubectl exec -it nginx-58cd4d4f44-8pwb7 -- /bin/bash
+*kubectl port-forward --address 0.0.0.0 service/nginx 8888 8111
+*coredns:
+kubectl get pods -n kube-system -o wide |grep coredns
+kubectl get service -n kube-system
+kubectl run client --image=busybox --replicas=1 -it --restart=Never
+cat /etc/resolv.conf
+nameserver 10.96.0.10                                               # kube-dns 地址
+search default.svc.cluster.local svc.cluster.local cluster.local    # 默认的解析搜索域
+options ndots:5
+wget -O - -q http://nginx:80/
+*label:
+kubectl get pods --show-labels -l app=nginx
+kubectl label pods client release=canary
+kubectl label pods client release=stable --overwrite
+kubectl label nodes node2 disktype-   #删除标签
+kubectl label nodes node2 disktype=ssd
+*动态扩容：kubectl scale --replicas=5 deployment nginx-deployment
+*滚动升级：kubectl set image deployment nginx-deployment nginx=ikubernetes/myapp:v2  
+kubectl rollout status deployment nginx-deployment
+kubectl rollout undo deployment nginx-deployment  
+*kubectl edit service nginx
+*kubectl edit deployment nginx-deployment  
+type: ClusterIP -> type: NodePort
+*kubectl logs redis
+*kubectl exec -it redis -c myapp -- /bin/sh
+*资源限制：kubectl set resources deployment nginx-deployment -c=nginx --limits=cpu=500m,memory=128Mi  -c指定容器
+-------------------------------------------------yaml----------------------------------
+*apiVersion，这里它的值是 v1，这个版本号需要根据我们安装的 kubernetes 版本和资源类型进行变化的，记住不是写死的
+*kind，这里我们创建的是一个 Pod，当然根据你的实际情况，这里资源类型可以是 Deployment、Job、Ingress、Service 等待。
+*metadata：包含了我们定义的 Pod 的一些 meta 信息，比如名称、namespace、标签等等信息。
+*spec：包括一些containers，storage，volumes，或者其他Kubernetes需要知道的参数，以及诸如是否在容器失败时重新启动容器的属性。你可以在特定 Kubernetes API 找到完整的 Kubernetes Pod 的属性。
+--------------------------------------------------pod-----------------------------
+*静态 Pod 直接由特定节点上的kubelet进程来管理，不通过 master 节点上的apiserver,kubelet会自动为每一个静态 pod 在 Kubernetes 的 apiserver 上创建一个镜像 Pod（Mirror Pod)。创建静态 Pod 有两种方式：配置文件和 HTTP 两种方式。
+1)进入node，systemctl status kubelet  找到启动配置文件.添加：Environment="KUBELET_SYSTEM_PODS_ARGS=--pod-manifest-path=/etc/kubernetes/manifests --allow-privileged=true"   重启kubelet
+2)–manifest-url=参数指定的地址
+*pod hook:poststart在容器创建后执行，prestop在容器终止前调用。钩子函数实现方式：exec,http
+*健康检查：LivenessProbe探测应用是否处于健康状态，如果不健康则删除并重新创建容器。ReadinessProbe探测应用是否启动完成并且处于正常服务状态，如果不正常则不会接收来自 Kubernetes Service 的流量。这两个探针的支持两种配置方式：exec：执行一段命令；http：检测某个 http 请求
+kubectl describe pod 查看event
+*PostStart和PreStop包括liveness和readiness是属于主容器的生命周期范围内的，而Init Container是独立于主容器之外的，当然他们都属于Pod的生命周期范畴之内的
+--------------------------------------------RC-----------------------------
+kubectl create -f rc-demo.yaml
+kubectl get rc
+kubectl describe rc rc-demo
+kubectl apply -f rc-demo.yaml  # 修改源文件后执行
+kubectl edit rc rc-demo   #动态修改
+-------------------------------------------deployment------------------------
+*一个Deployment拥有多个Replica Set，而一个Replica Set拥有一个或多个Pod。一个Deployment控制多个rs主要是为了支持回滚机制，每当Deployment操作时，Kubernetes会重新生成一个Replica Set并保留。
+kubectl get deployments
+kubectl get rs
+滚动升级：
+minReadySeconds: 5
+strategy:
+  # indicate which strategy we want for rolling update
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 1
+kubectl apply -f nginx-deployment.yaml
+kubectl rollout status deployment/nginx-deploy
+kubectl rollout pause deployment nginx-deployment
+kubectl rollout resume deployment nginx-deployment
+kubectl rollout history deployment nginx-deployment --revision=3
+kubectl rollout undo deployment nginx-deployment --to-revision=2
+设置Deployment的.spec.revisionHistoryLimit来限制最大保留的revision number
+------------------------------------HPA--------------------------------
+*HAP通过监控分析RC或者Deployment控制的所有Pod的负载变化情况来确定是否需要调整Pod的副本数量
+*HPA在kubernetes集群中被设计成一个controller，我们可以简单的通过kubectl autoscale命令来创建一个HPA资源对象，HPA Controller默认30s轮询一次（可通过kube-controller-manager的标志--horizontal-pod-autoscaler-sync-period进行设置）
+*Heapster：仅支持CPU使用率
+*kubectl autoscale deployment hpa-nginx-deploy --cpu-percent=10 --min=1 --max=10
+*kubectl get hpa  
+*kubectl get hpa hpa-nginx-deploy -o yaml

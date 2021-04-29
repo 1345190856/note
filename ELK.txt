@@ -23,7 +23,9 @@ output {
 bin/logstash -f logstash-simple.conf
 
 --------------------------------------elasticsearch------------------------------
+*wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.7.0-linux-x86_64.tar.gz
 *Elasticsearch是Elastic Stack核心的分布式搜索和分析引擎,是一个基于Lucene、分布式、通过Restful方式进行交互的近实时搜索平台框架
-*
+*基本概念：Cluster 集群、Node节点、Index索引、Document文档、Shards & Replicas分片
+*RESTful
 ----------------------------------------kibana-------------------------------------
 Kibana是一个针对Elasticsearch的开源分析及可视化平台，用来搜索、查看交互存储在Elasticsearch索引中的数据.
