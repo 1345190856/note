@@ -5,6 +5,7 @@
 */boot分区不要使用RAID阵列创建
 *图形界面问题：/etc/inittab
 *忘记root密码：单用户模式passwd root
+*修改密码  ro改为rw，添加init=/bin/sh    ctrl+x     echo 'pass' | passwd --stdin root;touch /.autorelabel
 -------------------------------------------------命令工具-----------------------------------------------
 *pwd cd ls[-adhlcut] touch(创建或更新时间) mkdir[-p]  cp[-r]  rm[-rfi]  mv  
 *find [path] [-option] [expression]  
@@ -300,7 +301,7 @@ systemctl restart network
 cat /etc/redhat-release 
 uname -a
 sestatus
-systecmctl status firewalld.service
+systemctl status firewalld.service
 hostname -I  
 yum install libvirt* virt-* qemu-kvm* -y   # libvirt虚拟机管理,virt虚拟机安装克隆,qemu-kvm管理虚拟机磁盘   
 systemctl start libvirtd.service
@@ -355,6 +356,7 @@ qemu-img  --help |grep convert
 qemu-img convert -f raw -O qcow2 clsn.raw clsn.qcow2   #  转换原有磁盘格式，修改clsn7 虚拟机配置文件virsh edit clsn7 
 \rm clsn.raw   #删除原磁盘文件
 virsh attach-disk clsn7 /data/clsn7-add01.qcow2 vdb --live --cache=none --subdriver=qcow2  # 为虚拟机添加硬盘   vdb第二块硬盘  --live热添加  --subdriver 驱动类型
+virt-install --name master --virt-type kvm --ram 16384 --cdrom=/mnt/iso/CentOS-7-x86_64-Minimal-2003-1.iso  --disk path=/machine/master/master.qcow2,size=100,bus=scsi  --vcpu 4 --cpu host-passthrough    --network bridge=br0  --graphics vnc,listen=0.0.0.0,port=5900
 virsh --help |grep disk 
 virsh detach-disk clsn7  vdb   # 分离磁盘
 qemu-img resize clsn7-add01.qcow2 +1G

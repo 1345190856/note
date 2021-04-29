@@ -1,0 +1,5 @@
+*ICMP协议： 8位类型  8位代码  16位校验和
+*协议类型：IP 0X800,ARP 0x806,RARP 0x835
+*删除ARP:arp -d 192.168.1.109      添加arp:arp -s 192.168.1.109  14:43:45:12:f4:a1
+*tcpdump -i eth0 -ent '(dst 1.1.1.1 and src 2.2.2.2) or (dst 3.3.3.3 and src 4.4.4.4)'     未统计CRC
+*软件程序管理；/etc/inittab   或 /etc/init.d
