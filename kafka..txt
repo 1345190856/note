@@ -7,3 +7,37 @@ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --f
 bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 3 --partitions 1 --topic my-replicated-topic
 bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic my-replicated-topic
 bin/connect-standalone.sh config/connect-standalone.properties config/connect-file-source.properties config/connect-file-sink.properties
+
+systemctl start krb5kdc.service
+systemctl start kadmin.service
+kadmin.local -q "addprinc -randkey zookeeper/kdc@XH.COM"
+kadmin.local -q "addprinc -randkey kafka/kdc@XH.COM"
+kadmin.local
+xst -k /etc/security/keytabs/zookeeper.keytab zookeeper/kdc@XH.COM
+xst -k /etc/security/keytabs/kafka.keytab kafka/kdc@XH.COM
+xst -k /etc/security/keytabs/tfa.keytab tfa/tfa@XH.COM
+kinit -kt /etc/security/keytabs/zookeeper.keytab zookeeper/kdc@XH.COM
+
+bin/kafka-console-producer.sh --broker-list kdc:9092 --topic ssl --producer.config config/producer.properties
+bin/kafka-console-consumer.sh --bootstrap-server kdc:9092 --topic ssl --from-beginning --consumer.config config/consumer.properties
+
+zookeeper是用来提供服务发现之用，搭建kafka集群，注册到zookeeper，为防止消费的异常，搭建kerberos做认证管理，只有通过认证的kafka消费者才可以消费生产者的消息。kerberos在生产者和消费者之间建立共享秘钥，提供身份认证。
+-------------------------------------------------------------概念---------------------------------------
+*概念:发布和订阅消息(实时流),topic,{key:value}
+*topic,producer,consumer,broker(每一个服务器都是一个代理)
+*每个topic有多个分区(统称log),分区中的消息都被分了一个偏移量(offset)。每个分区有一个leader，Leader处理此分区的所有的读写请求，而follower被动的复制数据。Topic分区中消息只能由消费者组中的唯一一个消费者处理，相同的消费者组中不能有比分区更多的消费者，否则多出的消费者一直处于空等待，不会收到消息。
+*队列：消费者组（consumer group）允许同名的消费者组成员瓜分处理。发布订阅：允许你广播消息给多个消费者组（不同名）。
+*流处理持续获取输入topic的数据，进行处理加工，然后写入输出topic
+------------------------------------------------------------配置-----------------------------------------
+*核心配置：broker.id   log.dirs   zookeeper.connect
+*bin/kafka-topics.sh --zookeeper localhost:2181 --create --topic my-topic --partitions 1 --replication-factor 1 --config max.message.bytes=64000 --config flush.messages=1
+*
+--------------------------------------------------------------kerberos-------------------------------------
+*broker使用SSL或SASL(Kerberos)，验证客户端（生产者或消费者）、其他broker或工具的连接，支持的SASL机制：SASL/GSSAPI (Kerberos)，SASL/PLAIN
+*Kerberos 是一种网络认证协议，通过对称加密为客户机 / 服务器应用程序提供强大的认证服务。
+*Kafka使用Java认证和授权服务（JAAS）进行SASL配置。
+*KDC:密钥分发中心   TGT：票证授予票证  Realm:领域  principal:也叫Kerberos主体，每张票证都以主体名称标识。主体名称可以标识用户或服务，主体名称分为三个部分:主名称、实例和领域，如joe/admin@ENG.EXAMPLE.COM     Client:需要使用kerbores服务的客户端   Service：提供具体服务的服务端   
+*authentication server（或kinit）将向KDC发送一个TGT请求，而他的principal将作为其中的组成部分。KDC在其数据库中检查该pricipal，如果找到了该principal，则KDC将创建一个TGT，并用user key进行加密，然后将加密后的TGT发送给该用户，用户的user key进行解密。
+*Producer向KDC认证身份，通过则得到TGT（票证请求票证），否则报错退出；Producer使用TGT向KDC请求Kafka服务，KDC验证TGT并向Producer返回SessionKey和ServiceTicket（服务票证）；Producer使用SessionKey和ServiceTicket与Broker建立连接，Broker使用自身的秘钥解密ServiceTicket，获得与Producer通信的SessionKey，然后使用SessionKey验证Producer的身份，通过则建立连接，否则拒绝连接。
+
+

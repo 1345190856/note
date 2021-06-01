@@ -165,26 +165,6 @@ hostname -i
 *转义\,行尾用\可换行
 *双引号不能屏蔽` \ $
 *反引号命令替换：echo "today is `date +%D`" ;echo "today is $(date +%D)"
-------------------------------------------------正则表达式----------------------------------------------
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
 --------------------------------------------------NFS---------------------------------------------------
 *NFSv2,NFSv3,nfsV4,监听TCP 2049端口,需要NFS和rpcbind服务
 *RFC协议管理远程通信双方信息
@@ -228,31 +208,6 @@ smbclient -U smbuser //192.168.109.132/common   # help查看指令
 mount -t cifs //192.168.109.132/common /com -o username=smbuser,password=Lz@2041cn  #本地挂载
 echo "//192.168.109.132:/common /com cifs username=smbuser,password=Lz@2041cn 0 0" >> /etc/fstab  #永久挂载
 图形化界面：nautilus-connect-server 
-00000000000000000000-----------------------------------------------网络存储服务器------------------------------------------
-*DAS:主机总线通过scsi接口与存储设备相连
-*SAN：光纤交换机将服务器和存储设备连在一起的网络环境
-*NAS：以太网交换机连接服务器和存储设备，NFS,CIFS
-*IP-SAN:IP网络进行数据存储，ISCSI
-*iscsi:ip网络传输scsi命令，使用TCP 860和3260端口
-*LUN：设备逻辑单元号  IQN:SCSI合格名称
-*yum - install scsi-target-utils
-*服务器配置文件：/etc/tgt/targets.conf
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
 -----------------------------------------------------------iptables防火墙-----------------------------------------------
 *netfilter/iptables包过滤，网络地址转换，数据包管理。netfilter在内核，iptables面向用户。
 *iptables维护4个表(filter,nat,mangle,raw)和每个表5个链(INPUT,OUTPUT,FORWARD,PREROUTING,POSTROUTING)
@@ -373,16 +328,16 @@ virsh snapshot-delete  clsn7 --snapshotname 1516607756  # 删除快照
 *修改网络配置 ：virsh edit clsn7 
 *宿主机网桥：brctl show 
 *防火墙规则:iptables -t nat  -nvL
-
-*
-*
-*
-*
-*
-*
-*
-*
-*
+---------------------------------------------------概念----------------------------
+*虚拟内存
+*字符设备  块设备  网络设备
+*ls --time=atime -alF  查看访问时间
+*file file_name  
+*cat -n test.log
+*killall http*
+*sort -t ':' -k 3 -n /etc/passwd
+*du -sh * | sort -nr 
+*grep -n t file1 ;  grep -c t file1
 *
 *
 *

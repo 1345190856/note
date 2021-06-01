@@ -12,8 +12,13 @@ ip address 10.1.1.11 255.255.0.0
 ip route-static 192.168.4.167 255.255.255.255 10.0.0.105
 
 端口配置：
+display interface brief
+display ip interface brief  
+
+interface vlanif3  > ip address 10.1.2.1 255.255.255.0
 duplex {half|full|auto}
 speed {10|100|auto}
+interface 10ge 1/0/1
 port link-type {trunk|access|hybrid}
 undo shutdown
 
@@ -28,15 +33,18 @@ monitor-port 　#指定镜像端口
 port mirror 　# 指定被镜像端口
 
 vlan配置
+display port vlan
 vlan 4
-port ethernet 1/0/1 to ethernet 1/0/4 
+port 10ge 1/0/1 to  1/0/4 
 port access vlan 4   #配置基于access的VLAN
-port link-type trunk #设置当前端口为trunk
+port link-type trunk/access #设置当前端口为trunk
 port trunk permit vlan {ID|All} 　　#设trunk允许的VLAN 
 port trunk pvid vlan 34 　　　　　#设置trunk端口的PVID
 port link-type hybrid  #配置端口的链路类型为Hybrid类型
 port hybrid vlan vlan-id-list { tagged | untagged } #允许指定的VLAN通过当前Hybrid端口,缺省情况下，所有Hybrid端口只允许VLAN1通过
 display vlan [vlan_id] 
+
+
 
 STP配置
 stp {enable|disable} 设置生成树,默认关闭
@@ -54,6 +62,20 @@ commit
 display bfd session all verbose
 display bfd interface vlanif 50
 
+
+配置案例：
+vlan 3  > int vlanif 3   > ip address 192.168.3.115 255.255.255.0
+int Eth-Trunk 4  > port default vlan 3 
+
+
+
+
+undo port default vlan
+interface 10ge 1/0/1
+port link-type access
+port trunk allow-pass vlan 3
+
+ 
 
 
 

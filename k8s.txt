@@ -238,3 +238,54 @@ kubectl rollout undo deployment nginx-deployment --to-revision=2
 *kubectl autoscale deployment hpa-nginx-deploy --cpu-percent=10 --min=1 --max=10
 *kubectl get hpa  
 *kubectl get hpa hpa-nginx-deploy -o yaml
+---------------------------------------helm--------------------------------
+*Helm是一个命令行下的客户端工具。主要用于Kubernetes应用程序Chart的创建、打包、发布及创建和管理
+本地和远程的Chart仓库。
+*Tiller是Helm的服务端，部署在Kubernetes集群中，Tiller用于接收Helm的请求，并根据Chart生成Kubernete
+s的部署文件，然后提交给Kubernetes创建应用，Tiller还提供和了Release的升级、删除、回滚等一系列功能。
+*Chart是一个Helm的程序包，包含了运行一个Kubernetes应用程序所需的镜像、依赖关系和资源定义等。
+*docker search tiller;docker pull;docker tag 
+*kubectl get pod -n kube-system 
+*kubectl describe pod tiller-deploy-6cf797ffc4-642w2 -n kube-system
+*helm init --service-account tiller --tiller-image gcr.io/kubernetes-helm/tiller:latest --skip-refresh
+*kubectl edit deployment tiller-deploy -n kube-system
+*helm reset --force
+*配置方式：
+helm init --client-only --stable-repo-url https://aliacs-app-catalog.oss-cn-hangzhou.aliyuncs.com/charts/
+helm repo add incubator https://aliacs-app-catalog.oss-cn-hangzhou.aliyuncs.com/charts-incubator/
+helm repo update
+helm init --service-account tiller --upgrade -i registry.cn-hangzhou.aliyuncs.com/google_containers/tiller:v2.9.1  --stable-repo-url https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts
+helm init --service-account tiller --upgrade -i registry.cn-hangzhou.aliyuncs.com/google_containers/tiller:v2.9.1 --tiller-tls-cert /etc/kubernetes/ssl/tiller001.pem --tiller-tls-key /etc/kubernetes/ssl/tiller001-key.pem --tls-ca-cert /etc/kubernetes/ssl/ca.pem --tiller-namespace kube-system --stable-repo-url https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts
+kubectl create serviceaccount --namespace kube-system tiller
+kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
+kubectl get deploy --namespace kube-system   tiller-deploy  --output yaml|grep  serviceAccount
+kubectl -n kube-system get pods|grep tiller
+------------------------------------------------JOB-------------------------------------
+*Job负责处理任务，即仅执行一次的任务，它保证批处理任务的一个或多个Pod成功结束。而CronJob则就是在Job上加上了时间调度。
+*Job的RestartPolicy仅支持Never和OnFailure两种，不支持Always。
+*kubectl get jobs
+*kubectl logs podname
+*crontab的格式如下：分 时 日 月 星期   .spec.successfulJobsHistoryLimit和.spec.failedJobsHistoryLimit推荐填写
+*kubectl get cronjob
+* kubectl delete cronjob cronjob-demo  
+* kubectl delete jobs --all
+*kubectl run hello --schedule="*/1 * * * *" --restart=OnFailure --image=busybox -- /bin/sh -c "date; echo Hello from the Kubernetes cluster"
+---------------------------------------------service----------------------------------
+*Service是一种抽象的对象，它定义了一组Pod的逻辑集合和一个用于访问它们的策略
+*Node IP：Node节点的IP地址   Pod IP: Pod的IP地址   Cluster IP: Service的IP地址
+*Service能够支持 TCP 和 UDP 协议，默认是 TCP 协议。
+*每个Node会运行一个kube-proxy进程, 负责为Service实现一种 VIP(clusterIP）的代理形式，默认是使用的iptables这种模式来代理。kube-proxy会监视Kubernetes master对 Service 对象和 Endpoints 对象的添加和移除。 对每个 Service，它会添加上 iptables 规则，从而捕获到达该 Service 的 clusterIP（虚拟 IP）和端口的请求，进而将请求重定向到 Service 的一组 backend 中的某一个个上面。 对于每个 Endpoints 对象，它也会安装 iptables 规则，这个规则会选择一个 backend Pod。
+*Service 类型:
+ClusterIP：通过集群的内部 IP 暴露服务，选择该值，服务只能够在集群内部可以访问，这也是默认的ServiceType。
+NodePort：通过每个 Node 节点上的 IP 和静态端口（NodePort）暴露服务。NodePort 服务会路由到 ClusterIP 服务，这个 ClusterIP 服务会自动创建。通过请求 :，可以从集群的外部访问一个 NodePort 服务。
+LoadBalancer：使用云提供商的负载局衡器，可以向外部暴露服务。外部的负载均衡器可以路由到 NodePort 服务和 ClusterIP 服务，这个需要结合具体的云厂商进行操作。
+ExternalName：通过返回 CNAME 和它的值，可以将服务映射到 externalName 字段的内容（例如， foo.bar.example.com）。没有任何类型代理被创建，这只有 Kubernetes 1.7 或更高版本的 kube-dns 才支持。
+
+
+
+
+
+
+
+
