@@ -1,4 +1,5 @@
---------------------------------------------install----------------------------------
+  
+  --------------------------------------------install----------------------------------
 sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
 sudo yum install -y yum-utils device-mapper-persistent-data lvm2
 sudo yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
@@ -22,6 +23,10 @@ sudo docker run hello-world
 *Docker Registry：用来存储 Docker 镜像的仓库
 *Images：镜像是一个只读模板
 *Containers：容器是一个镜像的可运行的实例，容器启动时创建一层可写层作为最上层,可以使用 Docker REST API 或者 CLI 来操作容器
+--------------------------------------------组件------------------------------------
+*runc：是一个用来运行容器的轻量级工具
+*contained：是容器标准化后的产物，从 Dockerd 剥离出来，contained 通过 contained-shim 启动并管理runc，可以说 contained 是真正管理容器的生命周期
+
 --------------------------------------------操作------------------------
 *docker pull [选项] [Docker Registry 地址[:端口]/]仓库名[:标签]
 *docker run -it --rm ubuntu:16.04 /bin/bash   
@@ -242,8 +247,7 @@ CMD [ "app-server" ]
 *VOLUME指令用于暴露任何数据库存储文件，配置文件
 *USER 指令切换到非 root 用户。先在 Dockerfile 中使用类似 RUN groupadd -r postgres && useradd -r -g postgres postgres 的指令创建用户和用户组。
 *WORKDIR中使用绝对路径
-----------------------------------------------------docker 项目---------------------------------
-https://www.spug.dev/docs/install-docker/
+
 
 
 

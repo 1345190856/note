@@ -23,6 +23,7 @@ display ip routing-table
 display bfd session static
 bfd test  >  shurdown 
 ip route-static track bfd session-name test admindown invalid 
+dis arp
 -------------------------------------ECMP--------------------------------
 ECMP是一个逐跳的基于流的负载均衡策略
 ECMP的路径选择策略有多种方法：哈希，例如根据源IP地址的哈希为流选择路径。轮询，各个流在多条路径之间轮询传输。基于路径权重，根据路径的权重分配流，权重大的路径分配的流数量更多。

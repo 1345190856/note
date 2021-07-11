@@ -328,6 +328,22 @@ virsh snapshot-delete  clsn7 --snapshotname 1516607756  # 删除快照
 *修改网络配置 ：virsh edit clsn7 
 *宿主机网桥：brctl show 
 *防火墙规则:iptables -t nat  -nvL
+-----------------------------------------------------vagrant-----------------------------------
+* yum install kernel-devel kernel-headers make patch gcc
+* wget https://download.virtualbox.org/virtualbox/rpm/el/virtualbox.repo -P /etc/yum.repos.d
+* yum install VirtualBox-6.1
+* systemctl status vboxdrv
+* wget https://download.virtualbox.org/virtualbox/6.1.22/Oracle_VM_VirtualBox_Extension_Pack-6.1.22.vbox-extpack
+*VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-6.1.22.vbox-extpack 
+*VBoxManage list extpacks
+*VBoxManage createvm --name Ubuntu16.04 --register
+*vboxmanage createvm --name ubuntu --register --basefolder /machine/ubuntu
+*VBoxManage createmedium disk  --filename /machine/ubuntu/ubuntu/ubuntu_os --size 100000
+*VBoxManage modifyvm Ubuntu16.04 --ostype Ubuntu
+* VBoxManage modifyvm Ubuntu10.10 --memory 512
+*VBoxManage storagectl Ubuntu16.04 --name IDE --add ide --controller PIIX4 --bootable on
+*VBoxManage storagectl Ubuntu16.04 --name SATA --add sata --controller IntelAhci --bootable on
+*VBoxManage storageattach Ubuntu16.04 --storagectl SATA --port 0 --device 0 --type hdd --medium "your_iso_filepath"
 ---------------------------------------------------概念----------------------------
 *虚拟内存
 *字符设备  块设备  网络设备
@@ -338,22 +354,102 @@ virsh snapshot-delete  clsn7 --snapshotname 1516607756  # 删除快照
 *sort -t ':' -k 3 -n /etc/passwd
 *du -sh * | sort -nr 
 *grep -n t file1 ;  grep -c t file1
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
+*jobs -l 
+*coproc sleep 10  协程 
+*alias ins='cd /mnt/fpc_test/ins52/code'
+*printenv  全局
+*printenv HOME 
+*set 全局、局部、自定义
+*my_variable="I am Global now"  ;  export my_variable  ; unset my_variable
+*常用环境变量：PATH HOME PS1 PS2 HISTSIZE HOSTNAME LANG RANDOM  IFS
+* PATH=$PATH:/home/christine/Scripts
+* /etc/profile    $HOME/.bash_profile   $HOME/.bashrc   $HOME/.bash_login     $HOME/.profile
+*mytest=(one two three four five)  ;   echo ${mytest[2]}  ; echo ${mytest[*]} ;  mytest[2]=seven  ; unset mytest[2]
+*useradd userdel usermod passwd chpasswd chsh groupadd groupmod  chmod chown chgrp  
+*硬盘->分区fdisk->物理卷pvcreate->卷组vgcreate->逻辑卷lvcreate
+*vim 替换:s/old/new/g
+*命令替换：test=`date`  ;  test=$(date)
+*var=$[1+2]   factorial=$[ $factorial * $number ]
+*if then elif else fi  ;  for do done ;  for (( a = 1; a < 10; a++ ))     done后可以输出到文件或使用管道
+*数值比较：if [ $value1 -gt 5 ]   字符串比较：if [ $val1 > $val2 ]   文件比较：if [ -d $jump_directory ]
+复杂运算：if (( $val1 ** 2 > 90 ))      模式匹配：if [[ $USER == r* ]]
+*echo -n 'admin' | base64
+*break n   其中n指定了要跳出的循环层级
+*input="users.csv"
+while IFS=',' read -r userid name
+do
+ echo "adding $userid"
+ useradd -c "$name" -m $userid
+done < "$input"
+*$# 参数个数   $* $@
+*命令选项：
+-a 显示所有对象
+-c 生成一个计数
+-d 指定一个目录
+-e 扩展一个对象
+-f 指定读入数据的文件
+-h 显示命令的帮助信息
+-i 忽略文本大小写
+-l 产生输出的长格式版本
+-n 使用非交互模式（批处理）
+-o 将所有输出重定向到的指定的输出文件
+-q 以安静模式运行
+-r 递归地处理目录和文件
+-s 以安静模式运行
+-v 生成详细输出
+-x 排除某个对象
+-y 对所有问题回答yes
+*read -p "Enter your name: " first last  ;  cat test | while read line   常用参数：-n -p -t -l -s 
+*文件描述符：0标准输入 1标准输出 2标准错误
+ls -al test test2 test3 badtest 2> test6 1> test7
+ls -al test test2 test3 badtest &> test7
+*永久重定向： exec 1>testout    重定向输入：exec 0< testfile
+*文件描述符；/usr/sbin/lsof -a -p $$ -d 0,1,2 
+* ls -al > /dev/null；ls -al badfile test16 2> /dev/null 
+*记录消息：date | tee -a testfile 
+*示例：
+outfile='members.sql'
+IFS=','
+while read lname fname address city state zip
+do
+ cat >> $outfile << EOF
+ INSERT INTO members (lname,fname,address,city,state,zip) VALUES
+('$lname', '$fname', '$address', '$city', '$state', '$zip');
+EOF
+done < ${1} 
+*jobs -l  ;  bg 作业号； fg 作业号 
+*nice -n 10 ./test4.sh > test4.out &  ； renice -n 10 -p 5055  调整优先级
+ 
+------------------------------------------参数调优-------------------------------------
+*top：1（cpu） b（高亮） c（显示命令） t（CPU） m（内存） x   k（杀死进程）  
+*ps -aux --sort -pcpu | less；ps -aux --sort -pmem | less
+*vmstat 2 4 ;  vmstat -s ;   vmstat -p /dev/sdc1   
+r: 运行队列中进程数量
+b： 等待IO的进程数量
+si: 每秒从交换区写到内存的大小
+so: 每秒写入交换区的内存大小
+bi: 每秒读取的块数
+bo: 每秒写入的块数
+in: 每秒中断数，包括时钟中断
+cs: 每秒上下文切换数
+us: 用户进程执行时间
+sy: 系统进程执行时间
+id: 空闲时间(包括IO等待时间),中央处理器的空闲时间 。以百分比表示。
+wa: 等待IO时间
+*netstat -an | grep 2158(PID,或服务名，或端口); ll /proc/2158 ； 
+*lsof -p 2158 -a -i 4
+-p <进程号>    -c <进程名>    -i <条件>  （4、6、协议、:端口、 @ip ）
+*sar -u -o test.txt 2 3    -u(cpu)  -v(inode)  -r(memory)  -B(分页)
+*tuned： 配置策略在/usr/lib/tuned/
+*tuned-adm list/active/recommend/profile/off
+*coredump调试：
+ulimit -c unlimited  打开coredump开关
+dmesg   启动信息，出错对战地址
+addr2line -e a.out 0000000000400571    将指令的地址和可执行映像转换成文件名，函数名或源代码
+gdb a.out core.1989     bt ：查看堆栈信息    i locals ：查看当前程序栈的局部变量    i args ：查看当前程序栈的参数   i catch ：查看当前程序中栈帧的异常处理器   p a ：打印变量的值    i register ：查看当前寄存器的值    r ：从运行程序至第一个断点，没有断点则一直运行完
+strace -i ./a.out    -p指定进程pid   -i输出系统调用的入口指针
+------------------------------------------------安全--------------------------------------------
+
 *
 *
 *

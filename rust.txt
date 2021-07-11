@@ -1,0 +1,180 @@
+----------------------------------------------install---------------------------------
+*curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+*vi ~/.cargo/config
+[source.crates-io]
+replace-with = "rustcc"
+[source.rustcc]
+registry = "git://crates.rustcc.cn/crates.io-index"
+*rustup update 
+*rustup self uninstall
+*rustc --version
+*cargo --version
+-----------------------------------------------use-----------------------
+fn main() {
+    println!("Hello,world!");
+}
+*rustc main.rs
+./main 
+*缩进使用空格，！使用宏，调用普通函数不用加！
+*cargo new hello_cargo
+*cargo build
+*cargo run  
+*cargo check 
+*标准输入 use std::io;
+*变量：
+let foo = 5; // immutable
+let mut bar = 5; // mutable
+let mut guess = String::new();    //新string实例，new创建空字符串
+*&mut 应用变量
+*io::stdin().read_line(&mut guess).expect("Failed to read line");  //.foo()可换行
+*println!("x = {} and y = {}", x, y);
+*rand = "0.8.3"   需要更新时修改为 rand = "0.9.0"
+*Cargo.lock保证项目版本
+*cargo update更新到最新版本并且写入Cargo.lock
+*use rand::Rng;  
+rand::thread_rng().gen_range(1..101);   
+*cargo doc --open
+*std::cmp::Ordering     Ordering is another enum, but the variants for Ordering are Less, Greater, and Equal.
+*match guess.cmp(&secret_number) {
+        Ordering::Less => println!("Too small!"),
+        Ordering::Greater => println!("Too big!"),
+        Ordering::Equal => println!("You win!"),
+    }
+*i32, a 32-bit number; u32, an unsigned 32-bit number; i64, a 64-bit number;  Rust defaults to an i32
+*let guess: u32 = guess.trim().parse().expect("Please type a number!");    trim()清除换行符； parse()讲字符转为某类型数字,返回Result type并且Result 是enum包括Ok or Err
+let guess: u32 = match guess.trim().parse() {
+		Ok(num) => num,  
+		Err(_) => continue, // _ is a catchall value; 
+	};
+-----------------------------------------------------concept----------------------------------------
+*变量默认不可变，可变变量使用mut。常量不能使用mut使之可变
+const MAX_POINTS: u32 = 100_000;   
+*覆盖变量：let x = 5;  let x = x + 1;  不用let无法修改不可变变量
+*let guess: u32 = "42".parse().expect("Not a number!");
+*标量类型：整数，浮点数，布尔值，字符
+*有符号整数以i开头，i8 can store numbers from -(2**7) to 2**7 - 1，u8 can store numbers from 0 to 2**8 - 1。数字类型默认是 i32
+*除 byte 以外的所有数字字面值允许使用类型后缀，例如 57u8，同时也允许使用 _ 做为分隔符以方便读数，例如1_000。
+*Rust 的浮点数类型是 f32 和 f64，分别占 32 位和 64 位。默认类型是 f64。f32 是单精度浮点数，f64 是双精度浮点数。
+* let remainder = 43 % 5;
+*Rust 中的布尔类型使用 bool 表示，有两个可能的值：true 和 false， let f: bool = false;
+*char 由单引号指定，不同于字符串使用双引号。char 类型的大小为四个字节(four bytes)，并代表了一个 Unicode 标量值
+*复合类型（Compound types）可以将多个值组合成一个类型。Rust 有两个原生的复合类型：元组（tuple）和数组（array）。
+*元组长度固定：一旦声明，其长度不会增大或缩小。
+let tup: (i32, f64, u8) = (500, 6.4, 1);
+let tup = (500, 6.4, 1);
+let (x, y, z) = tup;  //模式匹配解构
+let one = x.0;  //点号（.）后跟值的索引来直接访问
+*数组是一整块分配在栈上的内存，与元组不同，数组中的每个元素的类型必须相同,数组是固定长度的
+let a = [1, 2, 3, 4, 5];
+let a: [i32; 5] = [1, 2, 3, 4, 5];   //5 表明该数组包含五个元素
+let a = [3; 5];  //初始化，指定初始值和长度
+let first = a[0];
+*Rust 不关心函数定义于何处，只要定义了就行。函数签名中，必须 声明每个参数的类型。
+*语句（Statements）是执行一些操作但不返回值的指令。表达式（Expressions）计算并产生一个值。表达式可以是语句的一部分。表达式的结尾没有分号。如果在表达式的结尾加上分号，它就变成了语句，而语句不会返回值
+let y = {
+        let x = 3;
+        x + 1   //注意无分号
+    };
+*函数可以向调用它的代码返回值。我们并不对返回值命名，但要在箭头（->）后声明它的类型。函数的返回值等同于函数体最后一个表达式的值。使用 return 关键字和指定值，可从函数中提前返回；但大部分函数隐式的返回最后的表达式
+fn plus_one(x: i32) -> i32 {
+    x + 1
+}
+*if   else if    else 总是显式地使用布尔值作为 if 的条件。if 和 else 分支的值类型必须一样
+let condition = true;
+let number = if condition {
+	5
+} else {
+	6
+};
+*返回值加入你用来停止循环的 break 表达式，它会被停止的循环返回 break counter * 2;
+*
+let a = [10, 20, 30, 40, 50];
+for element in a.iter() {
+	println!("the value is: {}", element);
+}
+for number in (1..4).rev() {
+	println!("{}!", number);
+}
+-----------------------------------------------所有权-----------------------------------
+*栈后进先出，栈中的所有数据都必须占用已知且固定的大小。在编译时大小未知或大小可能变化的数据，要改为存储在堆上。堆是缺乏组织的：当向堆放入数据时，你要请求一定大小的空间。操作系统在堆的某处找到一块足够大的空位，把它标记为已使用，并返回一个表示该位置地址的 指针（pointer）。这个过程称作 在堆上分配内存。将数据推入栈中并不被认为是分配。因为指针的大小是已知并且固定的，你可以将指针存储在栈上，不过当需要实际数据时，必须访问指针。访问堆上的数据比访问栈上的数据慢，因为必须通过指针来访问。当你的代码调用一个函数时，传递给函数的值（包括可能指向堆上数据的指针）和函数的局部变量被压入栈中。当函数结束时，这些值被移出栈。
+*跟踪哪部分代码正在使用堆上的哪些数据，最大限度的减少堆上的重复数据的数量，以及清理堆上不再使用的数据确保不会耗尽空间，这些问题正是所有权系统要处理的
+*规则：Rust 中的每一个值都有一个被称为其 所有者（owner）的变量。值在任一时刻有且只有一个所有者。当所有者（变量）离开作用域，这个值将被丢弃。
+*String被分配到堆上，所以能够存储在编译时未知大小的文本
+let s = String::from("hello");
+let mut s = String::from("hello");
+s.push_str(", world!"); // push_str() 在字符串后追加字面值
+*内存在拥有它的变量离开作用域后就被自动调用drop释放堆内存
+*String 由三部分组成,一个指向存放字符串内容内存的指针，一个长度，和一个容量。这一组数据存储在栈上。长度表示 String 的内容当前使用了多少字节的内存。容量是 String 从操作系统总共获取了多少字节的内存。
+*移动：s1被移动到s2中，再调用s1会报错。例外，整型不会被移动。
+let s1 = String::from("hello");
+let s2 = s1;
+*克隆：堆上的数据也会复制
+let s1 = String::from("hello");
+let s2 = s1.clone();
+*如果一个类型拥有 Copy trait，一个旧的变量在将其赋值给其他变量后仍然可用。任何简单标量值的组合可以是 Copy 的，不需要分配内存或某种形式资源的类型是 Copy 的。
+所有整数类型，比如 u32。
+布尔类型，bool，它的值是 true 和 false。
+所有浮点数类型，比如 f64。
+字符类型，char。
+元组，当且仅当其包含的类型也都是 Copy 的时候。比如，(i32, i32) 是 Copy 的，但 (i32, String) 就不是。
+*向函数传递值可能会移动或者复制
+fn main() {
+    let s = String::from("hello");  // s 进入作用域
+    takes_ownership(s);             // s 的值移动到函数里 ...
+                                    // ... 所以到这里不再有效
+    let x = 5;                      // x 进入作用域
+    makes_copy(x);                  // x 应该移动函数里，
+                                    // 但 i32 是 Copy 的，所以在后面可继续使用 x
+} // 这里, x 先移出了作用域，然后是 s。但因为 s 的值已被移走，
+  // 所以不会有特殊操作
+*返回值也可以转移所有权。变量的所有权总是遵循相同的模式：将值赋给另一个变量时移动它。当持有堆中数据值的变量离开作用域时，其值将通过 drop 被清理掉，除非数据被移动为另一个变量所有。
+
+-----------------------------------------------工具--------------------------------------
+*HTTP工具：https://github.com/ducaale/xh
+cargo install xh
+ln -s /root/.cargo/bin/xh /root/.cargo/bin/xhs 
+xh localhost:3000/users  
+xh httpbin.org/get
+xhs httpbin.org/get    # for https
+xh httpbin.org/post name=ahmed age:=24   # post
+xh get httpbin.org/json id==5 sort==true
+xh put httpbin.org/put id:=49 age:=25 | less
+xh -d httpbin.org/json -o res.json  # download 
+xhs get tfa:41110/manager/ --verify==no
+-------------------------------------------项目------------------------------------
+https://rustcc.cn/article?id=fc8ed7a6-60cb-44fc-98ad-6fca536d38fd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

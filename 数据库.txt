@@ -1,0 +1,11 @@
+------------------------------------------clickhouse----------------------------------
+SHOW DATABASES
+SHOW TABLES
+clickhouse-client --query "select * from fpc.t_fpc_protocol_ssl_log_record where flow_id='6969025969434246553'" --format JSONEachRow
+clickhouse-client --query "select * from fpc.t_fpc_flow_log_record where flow_id='6969377181573979807'" --format JSONEachRow
+
+-------------------------------------------es------------------------------
+索引分片：curl -XGET http://127.0.0.1:9200/_cat/health?h=shards
+设置最大索引：curl -XPUT -H 'Content-Type: application/json' 'localhost:9200/_cluster/settings' -d '{ "persistent" : {"cluster.max_shards_per_node" : 1600}}'
+-----------------------------------zmq---------------------
+./zmq_client tcp://127.0.0.1:1800

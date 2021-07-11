@@ -20,8 +20,24 @@ MegaCli64 -CfgLdDel -L2 -A0  删除raid
 /MegaCli64 CfgLDAdd -r5 [41:5,41:6,41:7,41:8,41:9,41:10,41:11,41:12,41:13,41:14] -strpsz128 -A0  创建raid
 MegaCli64 -pdlist -a0|grep -Ei "enc|Slot Number|Firmware stat|media error |other error"
 MegaCli64 LDSetProp WB -Lall -Aall    write through 改成 write back
-
-
+----------------------------------storlic64--------------------------------
+参考：https://www.modb.pro/db/47261
+./storcli64 show all 
+./storcli64 /c0/e252/s0 start/show  initialization    
+./storcli64 -PDList -aALL
+./storcli64 /c0/e252/s1 show 
+./storcli64 /c0/eall/sall show
+./storcli64 /c0/e36/s1 set good
+./storcli64 /c0 add vd r0 size=all name=raid0 drives=252:0-11 awb ra cached strip=256
+./storcli64 /c0/e252/s1 add/delete hotsparedrive
+storcli64 /c0/vall show   查看raid编号
+storcli64 /cx/vx del force  删除raid 
+storcli64 /cx/vx set wrcache=wt|wb|awb  wt是关闭缓存  wb在RAID卡没有电池的情况下开启写缓存  awb在RAID卡含有电池的情况下开启写缓存
+storcli64 /cx/vx show init  
+storcli64 /cx/vx start init  
+storcli64 /cx/vx start init full  raid完全初始化
+storcli64 /cx/fall import    外部磁盘打入
+storcli64 /c0/e252/s0 del jbod
 -----------------------------------xlrd----------------------------------------
 sheet.cell(1,2)  #2行3列
 -----------------------------------xlwt-----------------------------

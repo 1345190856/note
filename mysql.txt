@@ -1,0 +1,60 @@
+------------------------------------mysql57--------------------
+rpm -qa | grep -i mysql 
+rpm -e 
+wget -i -c http://dev.mysql.com/get/mysql57-community-release-el7-10.noarch.rpm
+yum -y install mysql57-community-release-el7-10.noarch.rpm
+yum -y install mysql-community-server
+systemctl start mysqld.service
+grep "password" /var/log/mysqld.log
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'Machloop@123';
+yum -y remove mysql57-community-release-el7-10.noarch
+允许远程连接：
+vi /etc/my.cnf
+user=mysql
+port=3306
+#bind-address = 127.0.0.1
+use mysql;
+update user set host='%' where user='root' and host='localhost';
+flush privileges;
+客户端连接:
+yum install mysql  -y
+mysql -h42.192.133.243 -uroot -pMachloop@123
+
+----------------------------------mysql80-----------------------
+*tar -xvf mysql-8.0.21-1.el7.x86_64.rpm-bundle.tar 
+*rpm  -ivh mysql-community-common-8.0.21-1.el7.x86_64.rpm  --nodeps --force
+*rpm  -ivh mysql-community-libs-8.0.21-1.el7.x86_64.rpm  --nodeps --force
+*rpm  -ivh mysql-community-client-8.0.21-1.el7.x86_64.rpm  --nodeps --force
+*rpm  -ivh mysql-community-server-8.0.21-1.el7.x86_64.rpm  --nodeps --force
+*mysqld --initialize
+*chown mysql:mysql /var/lib/mysql -R
+*systemctl start mysqld.service
+*systemctl enable mysqld
+*cat /var/log/mysqld.log | grep password
+*ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'kasumi'; 
+*use mysql; 
+update user set host='%' where user ='root';  #设置远程
+flush privileges;
+GRANT ALL ON *.* TO 'root'@'%';
+flush privileges;
+--------------------------------postgresql-----------------------------
+sudo yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo yum install -y postgresql13-server
+/usr/pgsql-13/bin/postgresql-13-setup initdb
+systemctl start postgresql-13   && systemctl enable  postgresql-13
+su postgres
+psql
+alter user postgres with password 'Machloop@123';
+修改：
+vi /var/lib/pgsql/13/data/pg_hba.conf 		host all all 0.0.0.0/0 trust
+vi /var/lib/pgsql/13/data/pg_hba.conf		listen_addresses = '*'
+客户端远程连接：
+yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+yum install -y postgresql13
+PGPASSWORD=Machloop@123 psql -h 42.192.133.243 -U postgres -p 5432
+---------------------------oracle---------------------------
+wget http://public-yum.oracle.com/public-yum-ol7.repo
+wget http://public-yum.oracle.com/RPM-GPG-KEY-oracle-ol7 -O /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
+yum -y install compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm compat-libcap1-1.10-7.el7.x86_64.rpm oracle-database-preinstall-19c-1.0-1.el7.x86_64.rpm oracle-database-ee-19c-1.0-1.x86_64.rpm
+编译安装libnsl
+vi /etc/rc.d/init.d/oracledb_ORCLCDB-19c
